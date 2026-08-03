@@ -152,36 +152,35 @@ class MazeRenderer {
 
         const s = this.cellSize;
 
-        const x = cell.col * s;
+        const cx = cell.col * s + s / 2;
 
-        const y = cell.row * s;
+        const cy = cell.row * s + s / 2;
+
+        const r = s * 0.38;
 
         const ctx = this.ctx;
 
         ctx.save();
 
-        ctx.fillStyle = "#43A047";
+        // glow
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = "#69F0AE";
 
-        ctx.fillRect(
-            x + 6,
-            y + 6,
-            s - 12,
-            s - 12
-        );
+        ctx.beginPath();
+        ctx.roundRect(cx - r, cy - r, r * 2, r * 2, r * 0.3);
+        ctx.fillStyle = "#1B5E20";
+        ctx.fill();
+        ctx.strokeStyle = "#69F0AE";
+        ctx.lineWidth = 2;
+        ctx.stroke();
 
-        ctx.fillStyle = "#ffffff";
+        ctx.shadowBlur = 0;
 
-        ctx.font = "bold 16px sans-serif";
-
+        ctx.font = `bold ${Math.round(s * 0.38)}px sans-serif`;
         ctx.textAlign = "center";
-
         ctx.textBaseline = "middle";
-
-        ctx.fillText(
-            "S",
-            x + s / 2,
-            y + s / 2
-        );
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("🚦", cx, cy);
 
         ctx.restore();
 
@@ -195,36 +194,35 @@ class MazeRenderer {
 
         const s = this.cellSize;
 
-        const x = cell.col * s;
+        const cx = cell.col * s + s / 2;
 
-        const y = cell.row * s;
+        const cy = cell.row * s + s / 2;
+
+        const r = s * 0.38;
 
         const ctx = this.ctx;
 
         ctx.save();
 
-        ctx.fillStyle = "#E53935";
+        // glow
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = "#FFD740";
 
-        ctx.fillRect(
-            x + 6,
-            y + 6,
-            s - 12,
-            s - 12
-        );
+        ctx.beginPath();
+        ctx.roundRect(cx - r, cy - r, r * 2, r * 2, r * 0.3);
+        ctx.fillStyle = "#B71C1C";
+        ctx.fill();
+        ctx.strokeStyle = "#FFD740";
+        ctx.lineWidth = 2;
+        ctx.stroke();
 
-        ctx.fillStyle = "#ffffff";
+        ctx.shadowBlur = 0;
 
-        ctx.font = "bold 16px sans-serif";
-
+        ctx.font = `bold ${Math.round(s * 0.38)}px sans-serif`;
         ctx.textAlign = "center";
-
         ctx.textBaseline = "middle";
-
-        ctx.fillText(
-            "G",
-            x + s / 2,
-            y + s / 2
-        );
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("🏁", cx, cy);
 
         ctx.restore();
 
@@ -246,22 +244,20 @@ class MazeRenderer {
 
         ctx.save();
 
-        ctx.fillStyle = "rgba(33, 150, 243, 0.22)";
+        const total = maze.shortestPath.length;
 
-        for (const cell of maze.shortestPath) {
+        maze.shortestPath.forEach((cell, i) => {
 
-            const x = cell.col * s;
+            // t=0 (start) → เขียว (hue 120), t=1 (end) → แดง (hue 0)
+            const t = i / Math.max(total - 1, 1);
 
-            const y = cell.row * s;
+            const hue = Math.round(120 - t * 120);
 
-            ctx.fillRect(
-                x,
-                y,
-                s,
-                s
-            );
+            ctx.fillStyle = `hsla(${hue}, 85%, 60%, 0.4)`;
 
-        }
+            ctx.fillRect(cell.col * s, cell.row * s, s, s);
+
+        });
 
         ctx.restore();
 
