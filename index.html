@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Race</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="container">
+
+    <div id="leftPanel">
+
+        <canvas id="mazeCanvas"></canvas>
+
+    </div>
+
+    <div id="rightPanel">
+
+        <h2>Maze Race</h2>
+
+        <div class="configPanel">
+
+            <label class="configRow" for="mazeSizeInput">
+                <span>Maze Size</span>
+                <input id="mazeSizeInput" type="number" min="5" max="60" step="1" value="20">
+            </label>
+
+            <label class="configRow configToggle" for="toggleShortestPath">
+                <input id="toggleShortestPath" type="checkbox">
+                <span>Show Shortest Path</span>
+            </label>
+
+        </div>
+
+        <textarea id="playerNames" placeholder="One player per line">John
+Alice
+Bob
+Mike</textarea>
+
+        <div class="buttonGroup">
+            <button id="btnRandom">🎲 Random Maze</button>
+            <button id="btnShuffle">🔀 Shuffle Names + Emoji</button>
+            <button id="btnStart">▶ Start Game</button>
+        </div>
+
+        <div id="leaderboard">
+
+            <div class="boardColumns">
+
+                <div class="boardBlock">
+
+                    <h3>Leaderboard</h3>
+
+                    <ol id="ranking"></ol>
+
+                </div>
+
+                <div class="boardBlock">
+
+                    <h3>Racer List</h3>
+
+                    <ol id="racerList"></ol>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/maze.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/player.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/effects.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>

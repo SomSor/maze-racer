@@ -1,0 +1,177 @@
+// =====================================================
+// ai.js
+// =====================================================
+
+class MazeAI {
+
+    constructor(player) {
+
+        this.player = player;
+
+        this.lastDirection = null;
+
+        this.isWaiting = false;
+
+    }
+
+    update(dt) {
+
+        if (this.player.finished)
+            return;
+
+        if (this.player.state === "thinking")
+            return;
+
+        if (!this.reachedTarget())
+            return;
+
+        this.chooseNextMove();
+
+    }
+
+    reachedTarget() {
+
+        return (
+            Math.abs(this.player.x - this.player.targetX) < 1 &&
+            Math.abs(this.player.y - this.player.targetY) < 1
+        );
+
+    }
+
+    chooseNextMove() {
+
+        if (
+            this.player.cell === maze.end
+        ) {
+
+            if (!this.player.finished) {
+
+                this.player.finish(
+                    players.filter(p => p.finished).length + 1
+                );
+
+            }
+
+            return;
+
+        }
+
+        let dirs =
+            maze.getAvailableDirections(
+                this.player.cell
+            );
+
+        // ไม่ย้อนกลับทันที ถ้ายังมีทางอื่น
+        if (
+            this.lastDirection &&
+            dirs.length > 1
+        ) {
+
+            const back =
+                this.getOpposite(
+                    this.lastDirection
+                );
+
+            dirs =
+                dirs.filter(d => d !== back);
+
+        }
+
+        // ทางแยก -> คิดก่อน
+        if (dirs.length >= 3) {
+
+            this.player.think(
+
+                Config.thinkingMin +
+                Math.random() *
+                (
+                    Config.thinkingMax -
+                    Config.thinkingMin
+                )
+
+            );
+
+        }
+
+        const dir =
+            dirs[
+                Math.floor(
+                    Math.random() *
+                    dirs.length
+                )
+            ];
+
+        this.lastDirection = dir;
+
+        const next =
+            maze.getNeighbor(
+                this.player.cell,
+                dir
+            );
+
+        if (!next)
+            return;
+
+        this.player.setTarget(next);
+
+    }
+
+    getOpposite(dir) {
+
+        switch (dir) {
+
+            case "top":
+                return "bottom";
+
+            case "bottom":
+                return "top";
+
+            case "left":
+                return "right";
+
+            case "right":
+                return "left";
+
+        }
+
+        return null;
+
+    }
+
+}
+
+class AIManager {
+
+    constructor() {
+
+        this.list = [];
+
+    }
+
+    create(players) {
+
+        this.list = [];
+
+        for (const p of players) {
+
+            this.list.push(
+                new MazeAI(p)
+            );
+
+        }
+
+    }
+
+    update(dt) {
+
+        for (const ai of this.list) {
+
+            ai.update(dt);
+
+        }
+
+    }
+
+}
+
+const aiManager = new AIManager();
