@@ -20,6 +20,12 @@ class MazeGame {
 
         this.goalDistanceMap = new Map();
 
+        this.podiumActive = false;
+
+        this.podiumStartTime = 0;
+
+        this.btnPodiumOk = null;
+
         this.bindUI();
 
         this.newMaze();
@@ -77,6 +83,14 @@ class MazeGame {
                 "click",
                 () => this.shuffleNamesAndEmojis()
             );
+
+        this.btnPodiumOk =
+            document.getElementById("btnPodiumOk");
+
+        this.btnPodiumOk.addEventListener(
+            "click",
+            () => this.confirmPodium()
+        );
 
         const speedMinInput =
             document.getElementById("speedMinInput");
@@ -286,6 +300,12 @@ class MazeGame {
 
         this.finishOrder = [];
 
+        this.podiumActive = false;
+
+        this.podiumStartTime = 0;
+
+        this.hidePodiumButton();
+
         this.originalPairs = [];
 
         this.updateLeaderboard();
@@ -390,6 +410,12 @@ class MazeGame {
         aiManager.create(players);
 
         this.finishOrder = [];
+
+        this.podiumActive = false;
+
+        this.podiumStartTime = 0;
+
+        this.hidePodiumButton();
 
         this.running = true;
 
@@ -660,7 +686,68 @@ class MazeGame {
 
     render() {
 
-        renderer.render(maze);
+        const top3 =
+            this.finishOrder
+            .slice(0, 3)
+            .map((player, index) => ({
+                rank: index + 1,
+                emoji: player.emoji || "🙂",
+                name: player.name
+            }));
+
+        renderer.render(
+            maze,
+            {
+                podium:
+                    this.podiumActive
+                        ? {
+                            elapsed:
+                                performance.now() -
+                                this.podiumStartTime,
+                            top3
+                        }
+                        : null
+            }
+        );
+
+    }
+
+    //--------------------------------------------------
+
+    confirmPodium() {
+
+        if (!this.podiumActive)
+            return;
+
+        this.podiumActive = false;
+
+        this.hidePodiumButton();
+
+        this.stop();
+
+        this.render();
+
+    }
+
+    //--------------------------------------------------
+
+    showPodiumButton() {
+
+        if (!this.btnPodiumOk)
+            return;
+
+        this.btnPodiumOk.style.display = "block";
+
+    }
+
+    //--------------------------------------------------
+
+    hidePodiumButton() {
+
+        if (!this.btnPodiumOk)
+            return;
+
+        this.btnPodiumOk.style.display = "none";
 
     }
 
@@ -688,7 +775,15 @@ class MazeGame {
             this.finishOrder.length === players.length
         ) {
 
-            this.running = false;
+            if (!this.podiumActive) {
+
+                this.podiumActive = true;
+
+                this.podiumStartTime = performance.now();
+
+                this.showPodiumButton();
+
+            }
 
         }
 

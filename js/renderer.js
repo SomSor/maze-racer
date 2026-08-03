@@ -18,7 +18,7 @@ class MazeRenderer {
 
     //==================================================
 
-    render(maze) {
+    render(maze, effects = {}) {
 
         this.clear();
 
@@ -45,6 +45,13 @@ class MazeRenderer {
         if (typeof players !== "undefined") {
 
             this.drawPlayers(players);
+
+        }
+
+        // ชั้นที่ 7
+        if (effects.podium) {
+
+            this.drawPodiumSequence(effects.podium);
 
         }
 
@@ -646,6 +653,132 @@ class MazeRenderer {
             x,
             y + 1
         );
+
+        ctx.restore();
+
+    }
+
+    //==================================================
+    // Finish Podium Sequence
+    //==================================================
+
+    drawPodiumSequence(podium) {
+
+        if (!podium || !podium.top3)
+            return;
+
+        if (podium.top3.length < 1)
+            return;
+
+        const ctx = this.ctx;
+
+        const w = this.canvas.width;
+
+        const h = this.canvas.height;
+
+        const progress =
+            Math.min(1, podium.elapsed / 800);
+
+        const rise =
+            1 - Math.pow(1 - progress, 3);
+
+        const shimmer =
+            0.5 + Math.sin(performance.now() * 0.01) * 0.5;
+
+        ctx.save();
+
+        ctx.fillStyle = "rgba(5,12,20,0.55)";
+        ctx.fillRect(0, 0, w, h);
+
+        const titleAlpha =
+            Math.min(1, podium.elapsed / 450);
+
+        ctx.globalAlpha = titleAlpha;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#fffde7";
+        ctx.font = "bold 42px Segoe UI";
+        ctx.fillText("Finish Podium", w / 2, h * 0.18);
+
+        ctx.font = "bold 22px Segoe UI";
+        ctx.fillStyle = "rgba(255,245,157,0.95)";
+        ctx.fillText("Top 3", w / 2, h * 0.24);
+
+        ctx.globalAlpha = 1;
+
+        const layout = [
+            { rank: 2, x: w * 0.33, baseHeight: 120, color: "#B0BEC5" },
+            { rank: 1, x: w * 0.5,  baseHeight: 170, color: "#FFD54F" },
+            { rank: 3, x: w * 0.67, baseHeight: 95,  color: "#CE93D8" }
+        ];
+
+        const podiumWidth =
+            Math.max(58, Math.min(108, this.cellSize * 1.35));
+
+        const floorY = h * 0.86;
+
+        for (const slot of layout) {
+
+            const winner =
+                podium.top3[slot.rank - 1];
+
+            if (!winner)
+                continue;
+
+            const columnHeight =
+                slot.baseHeight * rise;
+
+            const y = floorY - columnHeight;
+
+            ctx.save();
+
+            ctx.shadowBlur =
+                12 + shimmer * 8;
+            ctx.shadowColor = slot.color;
+            ctx.fillStyle = slot.color;
+
+            ctx.beginPath();
+            ctx.roundRect(
+                slot.x - podiumWidth / 2,
+                y,
+                podiumWidth,
+                columnHeight,
+                10
+            );
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = "rgba(255,255,255,0.45)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = "#1d1d1d";
+            ctx.font = "bold 24px Segoe UI";
+            ctx.textAlign = "center";
+            ctx.fillText(
+                String(slot.rank),
+                slot.x,
+                y + 28
+            );
+
+            ctx.font = "42px Segoe UI Emoji";
+            ctx.fillText(
+                winner.emoji,
+                slot.x,
+                y - 18
+            );
+
+            ctx.font = "bold 18px Segoe UI";
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(
+                winner.name,
+                slot.x,
+                y - 56
+            );
+
+            ctx.restore();
+
+        }
 
         ctx.restore();
 
