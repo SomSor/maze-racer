@@ -40,18 +40,15 @@
             </label>
 
             <div class="configRow">
-                <span>Speed Min</span>
+                <span>Speed Range</span>
                 <div class="sliderGroup">
-                    <input id="speedMinInput" type="range" min="1" max="20" step="1" value="2">
-                    <span id="speedMinVal">2</span>
-                </div>
-            </div>
-
-            <div class="configRow">
-                <span>Speed Max</span>
-                <div class="sliderGroup">
-                    <input id="speedMaxInput" type="range" min="1" max="20" step="1" value="5">
-                    <span id="speedMaxVal">5</span>
+                    <div class="dualRange" id="speedDualRange">
+                        <div class="dualRangeTrack"></div>
+                        <div class="dualRangeFill" id="speedRangeFill"></div>
+                        <input id="speedMinInput" type="range" min="1" max="20" step="1" value="2">
+                        <input id="speedMaxInput" type="range" min="1" max="20" step="1" value="5">
+                    </div>
+                    <span id="speedRangeVal">2-5</span>
                 </div>
             </div>
 

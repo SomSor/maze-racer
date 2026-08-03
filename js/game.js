@@ -78,28 +78,93 @@ class MazeGame {
                 () => this.shuffleNamesAndEmojis()
             );
 
-        const speedMinInput = document.getElementById("speedMinInput");
-        const speedMaxInput = document.getElementById("speedMaxInput");
-        const speedMinVal   = document.getElementById("speedMinVal");
-        const speedMaxVal   = document.getElementById("speedMaxVal");
+        const speedMinInput =
+            document.getElementById("speedMinInput");
+
+        const speedMaxInput =
+            document.getElementById("speedMaxInput");
+
+        const speedRangeVal =
+            document.getElementById("speedRangeVal");
+
+        const speedRangeFill =
+            document.getElementById("speedRangeFill");
+
+        const minBound = 1;
+
+        const maxBound = 20;
+
+        const updateSpeedRangeUI = () => {
+
+            speedRangeVal.textContent =
+                `${Config.speedMin}-${Config.speedMax}`;
+
+            const span = maxBound - minBound;
+
+            const left =
+                ((Config.speedMin - minBound) / span) * 100;
+
+            const right =
+                ((Config.speedMax - minBound) / span) * 100;
+
+            speedRangeFill.style.left = `${left}%`;
+
+            speedRangeFill.style.width = `${Math.max(0, right - left)}%`;
+
+        };
+
+        const syncSpeedRange = changed => {
+
+            let min =
+                parseInt(speedMinInput.value, 10);
+
+            let max =
+                parseInt(speedMaxInput.value, 10);
+
+            if (min > max) {
+
+                if (changed === "min") {
+
+                    max = min;
+
+                } else {
+
+                    min = max;
+
+                }
+
+            }
+
+            Config.speedMin =
+                Math.max(minBound, Math.min(maxBound, min));
+
+            Config.speedMax =
+                Math.max(minBound, Math.min(maxBound, max));
+
+            speedMinInput.value = String(Config.speedMin);
+
+            speedMaxInput.value = String(Config.speedMax);
+
+            updateSpeedRangeUI();
+
+        };
 
         speedMinInput.value = String(Config.speedMin);
+
         speedMaxInput.value = String(Config.speedMax);
-        speedMinVal.textContent = Config.speedMin;
-        speedMaxVal.textContent = Config.speedMax;
+
+        syncSpeedRange("max");
 
         speedMinInput.addEventListener("input", () => {
-            let v = parseInt(speedMinInput.value);
-            if (v > Config.speedMax) { v = Config.speedMax; speedMinInput.value = v; }
-            Config.speedMin = v;
-            speedMinVal.textContent = v;
+
+            syncSpeedRange("min");
+
         });
 
         speedMaxInput.addEventListener("input", () => {
-            let v = parseInt(speedMaxInput.value);
-            if (v < Config.speedMin) { v = Config.speedMin; speedMaxInput.value = v; }
-            Config.speedMax = v;
-            speedMaxVal.textContent = v;
+
+            syncSpeedRange("max");
+
         });
 
         const toggleNoRevisit = document.getElementById("toggleNoRevisit");

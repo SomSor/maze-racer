@@ -480,36 +480,65 @@ class MazeRenderer {
 
         ctx.save();
 
-        const frame =
-            Math.floor(
-                performance.now() / 250
-            ) % 4;
+        const now = performance.now();
 
-        let text = "";
+        const bubbleY = y - 38;
 
-        for (let i = 0; i < frame; i++) {
+        const bubbleW = 34;
 
-            text += ".";
+        const bubbleH = 22;
+
+        const bubbleR = 9;
+
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+
+        ctx.strokeStyle = "rgba(50,50,50,0.25)";
+
+        ctx.lineWidth = 1.5;
+
+        ctx.beginPath();
+        ctx.roundRect(
+            x - bubbleW / 2,
+            bubbleY - bubbleH / 2,
+            bubbleW,
+            bubbleH,
+            bubbleR
+        );
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x - 6, bubbleY + bubbleH / 2 - 1);
+        ctx.lineTo(x - 1, bubbleY + bubbleH / 2 + 8);
+        ctx.lineTo(x + 3, bubbleY + bubbleH / 2 - 1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        const dotSpacing = 8;
+        const dotBaseY = bubbleY;
+
+        for (let i = 0; i < 3; i++) {
+
+            const phase = (now * 0.01) - i * 0.8;
+
+            const lift = Math.sin(phase) * 1.7;
+
+            const pulse = 0.65 + (Math.sin(phase) + 1) * 0.175;
+
+            ctx.fillStyle = `rgba(90,90,90,${pulse.toFixed(3)})`;
+
+            ctx.beginPath();
+            ctx.arc(
+                x + (i - 1) * dotSpacing,
+                dotBaseY + lift,
+                2.4,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
 
         }
-
-        ctx.font =
-            "16px monospace";
-
-        ctx.textAlign = "center";
-
-        ctx.fillStyle =
-            "#555";
-
-        ctx.fillText(
-
-            text,
-
-            x,
-
-            y - 35
-
-        );
 
         ctx.restore();
 

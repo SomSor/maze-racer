@@ -18,6 +18,8 @@ class MazeAI {
 
         this.pathStack = [];
 
+        this.lastThinkCellKey = null;
+
     }
 
     update(dt) {
@@ -130,8 +132,23 @@ class MazeAI {
 
         }
 
-        // ทางแยก -> คิดก่อน
-        if (dirs.length >= 3) {
+        // ทางแยกใหญ่คิดเสมอ, ทางเลือก 2 ทางคิด 50%
+        const shouldThink =
+            dirs.length >= 3 ||
+            (
+                dirs.length === 2 &&
+                Math.random() < 0.5
+            );
+
+        const currentCellKey =
+            maze.key(this.player.cell);
+
+        if (
+            shouldThink &&
+            this.lastThinkCellKey !== currentCellKey
+        ) {
+
+            this.lastThinkCellKey = currentCellKey;
 
             this.player.think(
 
@@ -143,6 +160,9 @@ class MazeAI {
                 )
 
             );
+
+            // คิดก่อน แล้วค่อยตัดสินใจใน tick ถัดไป
+            return;
 
         }
 
@@ -164,6 +184,9 @@ class MazeAI {
 
         if (!next)
             return;
+
+        // ออกจากช่องนี้แล้ว จึงอนุญาตให้ช่องถัดไปคิดได้อีกครั้ง
+        this.lastThinkCellKey = null;
 
         this.player.setTarget(next);
 

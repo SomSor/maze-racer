@@ -16,9 +16,9 @@ const Config={
 
     fps:30,
 
-    thinkingMin:150,
+    thinkingMin:500,
 
-    thinkingMax:600,
+    thinkingMax:1000,
 
     speedMin:2,
 
