@@ -281,7 +281,7 @@ textarea{
 
     width:100%;
 
-    height:220px;
+    height:170px;
 
     resize:none;
 
@@ -356,6 +356,28 @@ button:hover{
 #leaderboard{
 
     margin-top:30px;
+
+}
+
+#raceTimer{
+
+    margin-bottom:12px;
+
+    padding:8px 10px;
+
+    border:1px solid #2f2f2f;
+
+    border-radius:8px;
+
+    background:#111;
+
+    color:#FFE082;
+
+    font-weight:700;
+
+    text-align:center;
+
+    letter-spacing:.4px;
 
 }
 

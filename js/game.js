@@ -36,6 +36,10 @@ class MazeGame {
 
         this.countdownStartSoundPlayed = false;
 
+        this.raceStartTime = 0;
+
+        this.timerEl = null;
+
         this.bindUI();
 
         this.newMaze();
@@ -96,6 +100,11 @@ class MazeGame {
 
         this.btnPodiumOk =
             document.getElementById("btnPodiumOk");
+
+        this.timerEl =
+            document.getElementById("raceTimer");
+
+        this.renderRaceTimer();
 
         this.btnPodiumOk.addEventListener(
             "click",
@@ -322,6 +331,10 @@ class MazeGame {
 
         this.countdownStartSoundPlayed = false;
 
+        this.raceStartTime = 0;
+
+        this.renderRaceTimer();
+
         this.hidePodiumButton();
 
         this.originalPairs = [];
@@ -442,6 +455,10 @@ class MazeGame {
         this.lastCountdownValue = null;
 
         this.countdownStartSoundPlayed = false;
+
+        this.raceStartTime = 0;
+
+        this.renderRaceTimer();
 
         this.hidePodiumButton();
 
@@ -718,6 +735,8 @@ class MazeGame {
 
         this.updateMoveAudio(dt);
 
+        this.renderRaceTimer();
+
         this.checkFinish();
 
     }
@@ -801,6 +820,14 @@ class MazeGame {
 
         this.countdownActive = false;
 
+        if (!this.raceStartTime) {
+
+            this.raceStartTime = performance.now();
+
+            this.renderRaceTimer();
+
+        }
+
         if (!this.countdownStartSoundPlayed) {
 
             soundFx.playCountdownStart();
@@ -808,6 +835,82 @@ class MazeGame {
             this.countdownStartSoundPlayed = true;
 
         }
+
+    }
+
+    //--------------------------------------------------
+
+    formatElapsed(ms) {
+
+        const clamped =
+            Math.max(0, Math.floor(ms));
+
+        const minutes =
+            Math.floor(clamped / 60000);
+
+        const seconds =
+            Math.floor((clamped % 60000) / 1000);
+
+        const millis =
+            clamped % 1000;
+
+        return (
+            String(minutes).padStart(2, "0") +
+            ":" +
+            String(seconds).padStart(2, "0") +
+            "." +
+            String(millis).padStart(3, "0")
+        );
+
+    }
+
+    //--------------------------------------------------
+
+    getElapsedRaceTime() {
+
+        if (!this.raceStartTime)
+            return 0;
+
+        if (
+            this.finishOrder.length > 0 &&
+            this.finishOrder.length === players.length
+        ) {
+
+            const latestFinish =
+                this.finishOrder[this.finishOrder.length - 1];
+
+            if (latestFinish && latestFinish.finishAt > 0) {
+
+                return latestFinish.finishAt - this.raceStartTime;
+
+            }
+
+        }
+
+        return performance.now() - this.raceStartTime;
+
+    }
+
+    //--------------------------------------------------
+
+    renderRaceTimer() {
+
+        if (!this.timerEl)
+            return;
+
+        if (!this.raceStartTime) {
+
+            this.timerEl.textContent = "⏱ 00:00.000";
+
+            return;
+
+        }
+
+        this.timerEl.textContent =
+            "⏱ " +
+            this.formatElapsed(
+                this.getElapsedRaceTime()
+            );
 
     }
 
@@ -1075,8 +1178,20 @@ class MazeGame {
 
             if (player.finished) {
 
+                let finishText = "";
+
+                if (this.raceStartTime && player.finishAt > 0) {
+
+                    finishText =
+                        " " +
+                        this.formatElapsed(
+                            player.finishAt - this.raceStartTime
+                        );
+
+                }
+
                 text +=
-                    " 🏁";
+                    " 🏁" + finishText;
 
             } else {
 
