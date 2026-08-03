@@ -32,6 +32,10 @@ class MazeGame {
 
         this.countdownDuration = 3000;
 
+        this.lastCountdownValue = null;
+
+        this.countdownStartSoundPlayed = false;
+
         this.bindUI();
 
         this.newMaze();
@@ -314,6 +318,10 @@ class MazeGame {
 
         this.countdownStartTime = 0;
 
+        this.lastCountdownValue = null;
+
+        this.countdownStartSoundPlayed = false;
+
         this.hidePodiumButton();
 
         this.originalPairs = [];
@@ -357,6 +365,8 @@ class MazeGame {
     start() {
 
         this.stop();
+
+        soundFx.unlock();
 
         const names =
             document
@@ -428,6 +438,10 @@ class MazeGame {
         this.countdownActive = true;
 
         this.countdownStartTime = performance.now();
+
+        this.lastCountdownValue = null;
+
+        this.countdownStartSoundPlayed = false;
 
         this.hidePodiumButton();
 
@@ -690,6 +704,8 @@ class MazeGame {
 
         if (this.countdownActive) {
 
+            this.updateCountdownAudio();
+
             this.updateCountdown();
 
             return;
@@ -699,6 +715,8 @@ class MazeGame {
         playerManager.update(dt);
 
         aiManager.update(dt);
+
+        this.updateMoveAudio(dt);
 
         this.checkFinish();
 
@@ -783,6 +801,96 @@ class MazeGame {
 
         this.countdownActive = false;
 
+        if (!this.countdownStartSoundPlayed) {
+
+            soundFx.playCountdownStart();
+
+            this.countdownStartSoundPlayed = true;
+
+        }
+
+    }
+
+    //--------------------------------------------------
+
+    updateCountdownAudio() {
+
+        const elapsed =
+            performance.now() -
+            this.countdownStartTime;
+
+        const remaining =
+            Math.max(0, this.countdownDuration - elapsed);
+
+        const value =
+            Math.max(1, Math.ceil(remaining / 1000));
+
+        if (this.lastCountdownValue === value)
+            return;
+
+        this.lastCountdownValue = value;
+
+        soundFx.playCountdownTick();
+
+    }
+
+    //--------------------------------------------------
+
+    updateMoveAudio(dt) {
+
+        const span =
+            Math.max(0.001, Config.speedMax - Config.speedMin);
+
+        for (const p of players) {
+
+            if (p.finished)
+                continue;
+
+            if (p.state !== "running")
+                continue;
+
+            const dist =
+                Math.hypot(
+                    p.targetX - p.x,
+                    p.targetY - p.y
+                );
+
+            const moving = dist > 1;
+
+            const speedRatio =
+                Math.max(
+                    0,
+                    Math.min(
+                        1,
+                        (p.speed - Config.speedMin) / span
+                    )
+                );
+
+            if (typeof p.stepSoundCooldown !== "number") {
+
+                p.stepSoundCooldown =
+                    120 + Math.random() * 120;
+
+            }
+
+            p.stepSoundCooldown -= dt;
+
+            if (!moving)
+                continue;
+
+            if (p.stepSoundCooldown > 0)
+                continue;
+
+            soundFx.playMove();
+
+            const baseInterval =
+                300 - speedRatio * 160;
+
+            p.stepSoundCooldown =
+                baseInterval * (0.9 + Math.random() * 0.25);
+
+        }
+
     }
 
     //--------------------------------------------------
@@ -837,6 +945,8 @@ class MazeGame {
 
                 this.finishOrder.push(p);
 
+                soundFx.playWin();
+
             }
 
         }
@@ -853,6 +963,8 @@ class MazeGame {
                 this.podiumActive = true;
 
                 this.podiumStartTime = performance.now();
+
+                soundFx.playPodiumHooray();
 
                 this.showPodiumButton();
 
