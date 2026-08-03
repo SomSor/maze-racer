@@ -38,9 +38,9 @@ body{
 
 #mazeCanvas{
 
-    width:720px;
+    width:960px;
 
-    height:720px;
+    height:960px;
 
     background:white;
 
@@ -120,6 +120,36 @@ body{
 
 }
 
+.sliderGroup{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+}
+
+.sliderGroup input[type="range"]{
+
+    width:120px;
+
+    accent-color:#42A5F5;
+
+    cursor:pointer;
+
+}
+
+.sliderGroup span{
+
+    width:22px;
+
+    text-align:right;
+
+    font-size:13px;
+
+}
+
 textarea{
 
     width:100%;
@@ -142,9 +172,19 @@ textarea{
 
     display:flex;
 
-    flex-direction:column;
+    flex-direction:row;
 
-    gap:10px;
+    gap:8px;
+
+}
+
+.buttonGroup button{
+
+    flex:1;
+
+    font-size:14px;
+
+    padding:10px 6px;
 
 }
 
