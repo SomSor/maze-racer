@@ -497,23 +497,50 @@ class MazeRenderer {
 
         const ctx = this.ctx;
 
+        const speedSpan =
+            Math.max(
+                0.001,
+                Config.speedMax - Config.speedMin
+            );
+
+        const speedRatio =
+            Math.max(
+                0,
+                Math.min(
+                    1,
+                    (player.speed - Config.speedMin) / speedSpan
+                )
+            );
+
+        const pulseStrength =
+            0.45 + speedRatio * 0.95;
+
+        const auraBlur =
+            12 + player.glow * (16 + speedRatio * 20);
+
+        const auraRadius =
+            player.radius * (1.05 + speedRatio * 0.2);
+
         ctx.save();
 
         ctx.shadowBlur =
-            20 + player.glow * 20;
+            auraBlur;
 
         ctx.shadowColor =
             player.color;
 
         ctx.fillStyle =
-            player.color;
+            this.hexToRGBA(
+                player.color,
+                0.28 + player.glow * 0.32 * pulseStrength
+            );
 
         ctx.beginPath();
 
         ctx.arc(
             x,
             y,
-            player.radius,
+            auraRadius,
             0,
             Math.PI * 2
         );

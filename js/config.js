@@ -8,7 +8,7 @@ const Config={
 
     wallWidth:4,
 
-    playerRadius:30,
+    playerRadius:60,
 
     playerNameFontSize:20,
 
@@ -28,7 +28,7 @@ const Config={
 
     trailLength:40,
 
-    bounceHeight:10,
+    bounceHeight:20,
 
     wiggle:2,
 
