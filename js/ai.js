@@ -12,6 +12,12 @@ class MazeAI {
 
         this.isWaiting = false;
 
+        this.visitedCells = new Set();
+
+        this.visitedCells.add(player.cell);
+
+        this.pathStack = [];
+
     }
 
     update(dt) {
@@ -56,10 +62,57 @@ class MazeAI {
 
         }
 
-        let dirs =
+        const allDirs =
             maze.getAvailableDirections(
                 this.player.cell
             );
+
+        let dirs;
+
+        if (Config.noRevisit) {
+
+            const unvisited = allDirs.filter(d => {
+                const nb = maze.getNeighbor(this.player.cell, d);
+                return nb && !this.visitedCells.has(nb);
+            });
+
+            if (unvisited.length > 0) {
+
+                // เดินไปยัง cell ใหม่ พร้อม push cell ปัจจุบันลง stack
+                const dir = unvisited[Math.floor(Math.random() * unvisited.length)];
+
+                const next = maze.getNeighbor(this.player.cell, dir);
+
+                if (!next) return;
+
+                this.pathStack.push(this.player.cell);
+
+                this.visitedCells.add(next);
+
+                this.lastDirection = dir;
+
+                this.player.setTarget(next);
+
+            } else if (this.pathStack.length > 0) {
+
+                // ทางตัน -> backtrack ผ่าน stack (ไม่ใช้ lastDirection)
+                const prev = this.pathStack.pop();
+
+                for (const d of allDirs) {
+                    if (maze.getNeighbor(this.player.cell, d) === prev) {
+                        this.lastDirection = d;
+                        this.player.setTarget(prev);
+                        break;
+                    }
+                }
+
+            }
+
+            return;
+
+        }
+
+        dirs = allDirs;
 
         // ไม่ย้อนกลับทันที ถ้ายังมีทางอื่น
         if (

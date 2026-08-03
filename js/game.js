@@ -102,6 +102,9 @@ class MazeGame {
             speedMaxVal.textContent = v;
         });
 
+        const toggleNoRevisit = document.getElementById("toggleNoRevisit");
+        toggleNoRevisit.checked = !!Config.noRevisit;
+
     }
 
     //--------------------------------------------------
@@ -215,6 +218,9 @@ class MazeGame {
                 emoji: player.emoji || "🙂",
                 name: player.name
             }));
+
+        Config.noRevisit =
+            document.getElementById("toggleNoRevisit").checked;
 
         aiManager.create(players);
 
