@@ -167,6 +167,106 @@ class MazeGame {
 
         });
 
+        const thinkingMinInput =
+            document.getElementById("thinkingMinInput");
+
+        const thinkingMaxInput =
+            document.getElementById("thinkingMaxInput");
+
+        const thinkingRangeVal =
+            document.getElementById("thinkingRangeVal");
+
+        const thinkingRangeFill =
+            document.getElementById("thinkingRangeFill");
+
+        const thinkingMinBound = 0;
+
+        const thinkingMaxBound = 3000;
+
+        const updateThinkingRangeUI = () => {
+
+            thinkingRangeVal.textContent =
+                `${Config.thinkingMin}-${Config.thinkingMax}`;
+
+            const span =
+                thinkingMaxBound - thinkingMinBound;
+
+            const left =
+                ((Config.thinkingMin - thinkingMinBound) / span) * 100;
+
+            const right =
+                ((Config.thinkingMax - thinkingMinBound) / span) * 100;
+
+            thinkingRangeFill.style.left = `${left}%`;
+
+            thinkingRangeFill.style.width = `${Math.max(0, right - left)}%`;
+
+        };
+
+        const syncThinkingRange = changed => {
+
+            let min =
+                parseInt(thinkingMinInput.value, 10);
+
+            let max =
+                parseInt(thinkingMaxInput.value, 10);
+
+            if (min > max) {
+
+                if (changed === "min") {
+
+                    max = min;
+
+                } else {
+
+                    min = max;
+
+                }
+
+            }
+
+            Config.thinkingMin =
+                Math.max(
+                    thinkingMinBound,
+                    Math.min(thinkingMaxBound, min)
+                );
+
+            Config.thinkingMax =
+                Math.max(
+                    thinkingMinBound,
+                    Math.min(thinkingMaxBound, max)
+                );
+
+            thinkingMinInput.value =
+                String(Config.thinkingMin);
+
+            thinkingMaxInput.value =
+                String(Config.thinkingMax);
+
+            updateThinkingRangeUI();
+
+        };
+
+        thinkingMinInput.value =
+            String(Config.thinkingMin);
+
+        thinkingMaxInput.value =
+            String(Config.thinkingMax);
+
+        syncThinkingRange("max");
+
+        thinkingMinInput.addEventListener("input", () => {
+
+            syncThinkingRange("min");
+
+        });
+
+        thinkingMaxInput.addEventListener("input", () => {
+
+            syncThinkingRange("max");
+
+        });
+
         const toggleNoRevisit = document.getElementById("toggleNoRevisit");
         toggleNoRevisit.checked = !!Config.noRevisit;
 
