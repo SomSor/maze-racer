@@ -51,6 +51,11 @@ class Player {
 
         this.finishAnimation = 0;
 
+        this.finishAt = -1;
+
+        this.goalBurstDuration =
+            600 + Math.random() * 400;
+
         this.waitTimer = 0;
 
     }
@@ -230,11 +235,16 @@ class Player {
 
     finish(rank) {
 
+        if (this.finished)
+            return;
+
         this.finished = true;
 
         this.rank = rank;
 
         this.state = "finished";
+
+        this.finishAt = performance.now();
 
     }
 

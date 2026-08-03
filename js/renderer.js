@@ -663,46 +663,118 @@ class MazeRenderer {
     }
 
     //==================================================
-    // Winner Effect
+    // Goal Burst
     //==================================================
 
-    drawWinner(player, x, y) {
+    drawGoalBurst(player, x, y) {
 
         if (!player.finished)
             return;
 
+        if (typeof player.finishAt !== "number")
+            return;
+
+        if (player.finishAt < 0)
+            return;
+
+        const now = performance.now();
+
+        const duration =
+            player.goalBurstDuration || 800;
+
+        const elapsed = now - player.finishAt;
+
+        if (elapsed < 0 || elapsed > duration)
+            return;
+
+        const t = elapsed / duration;
+
+        const fade = 1 - t;
+
         const ctx = this.ctx;
 
-        const r =
-            player.radius +
-            Math.sin(
-                performance.now() * 0.01
-            ) * 3;
+        const seed =
+            (player.rank || 1) * 0.47;
 
         ctx.save();
 
-        ctx.strokeStyle =
-            "#FFD700";
+        // วงแหวนกระจายออก
+        const ringRadius =
+            player.radius + 12 + t * 48;
 
-        ctx.lineWidth = 3;
+        ctx.strokeStyle =
+            this.hexToRGBA(player.color, 0.62 * fade);
+
+        ctx.lineWidth =
+            2 + (1 - t) * 2;
 
         ctx.beginPath();
-
-        ctx.arc(
-
-            x,
-
-            y,
-
-            r + 4,
-
-            0,
-
-            Math.PI * 2
-
-        );
-
+        ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
         ctx.stroke();
+
+        // แฉกรัศมี
+        const rayCount = 10;
+
+        for (let i = 0; i < rayCount; i++) {
+
+            const a =
+                seed + i * (Math.PI * 2 / rayCount);
+
+            const inner =
+                player.radius + 8 + t * 10;
+
+            const outer =
+                inner + 18 + t * 34;
+
+            ctx.strokeStyle =
+                this.hexToRGBA(
+                    player.color,
+                    (0.55 - i * 0.02) * fade
+                );
+
+            ctx.lineWidth =
+                1.5 + Math.sin(seed + i) * 0.4;
+
+            ctx.beginPath();
+            ctx.moveTo(
+                x + Math.cos(a) * inner,
+                y + Math.sin(a) * inner
+            );
+            ctx.lineTo(
+                x + Math.cos(a) * outer,
+                y + Math.sin(a) * outer
+            );
+            ctx.stroke();
+
+        }
+
+        // จุดประกายรอบๆ
+        const sparkCount = 14;
+
+        for (let i = 0; i < sparkCount; i++) {
+
+            const a =
+                seed * 1.7 +
+                i * (Math.PI * 2 / sparkCount);
+
+            const dist =
+                player.radius + 16 + t * (26 + (i % 4) * 6);
+
+            const sx = x + Math.cos(a) * dist;
+
+            const sy = y + Math.sin(a) * dist;
+
+            const r =
+                1 + (i % 3) * 0.7 + fade;
+
+            ctx.fillStyle =
+                this.hexToRGBA(player.color, 0.8 * fade);
+
+            ctx.beginPath();
+            ctx.arc(sx, sy, r, 0, Math.PI * 2);
+            ctx.fill();
+
+        }
 
         ctx.restore();
 
@@ -726,7 +798,7 @@ class MazeRenderer {
             y
         );
 
-        this.drawWinner(
+        this.drawGoalBurst(
             player,
             x,
             y
