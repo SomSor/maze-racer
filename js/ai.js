@@ -80,6 +80,39 @@ class MazeAI {
 
             if (unvisited.length > 0) {
 
+                const shouldThink =
+                    unvisited.length >= 3 ||
+                    (
+                        unvisited.length === 2 &&
+                        Math.random() < 0.5
+                    );
+
+                const currentCellKey =
+                    maze.key(this.player.cell);
+
+                if (
+                    shouldThink &&
+                    this.lastThinkCellKey !== currentCellKey
+                ) {
+
+                    this.lastThinkCellKey = currentCellKey;
+
+                    this.player.think(
+
+                        Config.thinkingMin +
+                        Math.random() *
+                        (
+                            Config.thinkingMax -
+                            Config.thinkingMin
+                        )
+
+                    );
+
+                    // คิดก่อน แล้วค่อยเลือกทางใน tick ถัดไป
+                    return;
+
+                }
+
                 // เดินไปยัง cell ใหม่ พร้อม push cell ปัจจุบันลง stack
                 const dir = unvisited[Math.floor(Math.random() * unvisited.length)];
 
@@ -90,6 +123,8 @@ class MazeAI {
                 this.pathStack.push(this.player.cell);
 
                 this.visitedCells.add(next);
+
+                this.lastThinkCellKey = null;
 
                 this.lastDirection = dir;
 
