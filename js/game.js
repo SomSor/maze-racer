@@ -26,6 +26,12 @@ class MazeGame {
 
         this.btnPodiumOk = null;
 
+        this.countdownActive = false;
+
+        this.countdownStartTime = 0;
+
+        this.countdownDuration = 3000;
+
         this.bindUI();
 
         this.newMaze();
@@ -304,6 +310,10 @@ class MazeGame {
 
         this.podiumStartTime = 0;
 
+        this.countdownActive = false;
+
+        this.countdownStartTime = 0;
+
         this.hidePodiumButton();
 
         this.originalPairs = [];
@@ -414,6 +424,10 @@ class MazeGame {
         this.podiumActive = false;
 
         this.podiumStartTime = 0;
+
+        this.countdownActive = true;
+
+        this.countdownStartTime = performance.now();
 
         this.hidePodiumButton();
 
@@ -674,6 +688,14 @@ class MazeGame {
 
     update(dt) {
 
+        if (this.countdownActive) {
+
+            this.updateCountdown();
+
+            return;
+
+        }
+
         playerManager.update(dt);
 
         aiManager.update(dt);
@@ -695,9 +717,15 @@ class MazeGame {
                 name: player.name
             }));
 
+        const countdown =
+            this.countdownActive
+                ? this.createCountdownEffect()
+                : null;
+
         renderer.render(
             maze,
             {
+                countdown,
                 podium:
                     this.podiumActive
                         ? {
@@ -709,6 +737,51 @@ class MazeGame {
                         : null
             }
         );
+
+    }
+
+    //--------------------------------------------------
+
+    createCountdownEffect() {
+
+        const elapsed =
+            performance.now() -
+            this.countdownStartTime;
+
+        const remaining =
+            Math.max(0, this.countdownDuration - elapsed);
+
+        const secondPhase =
+            (elapsed % 1000) / 1000;
+
+        const flash =
+            Math.max(0, 1 - secondPhase * 1.45);
+
+        const value =
+            Math.max(1, Math.ceil(remaining / 1000));
+
+        return {
+            elapsed,
+            duration: this.countdownDuration,
+            value,
+            flash,
+            shake: flash * 3.2
+        };
+
+    }
+
+    //--------------------------------------------------
+
+    updateCountdown() {
+
+        const elapsed =
+            performance.now() -
+            this.countdownStartTime;
+
+        if (elapsed < this.countdownDuration)
+            return;
+
+        this.countdownActive = false;
 
     }
 

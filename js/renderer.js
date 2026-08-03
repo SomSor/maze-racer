@@ -22,6 +22,27 @@ class MazeRenderer {
 
         this.clear();
 
+        const countdown = effects.countdown || null;
+
+        const shake =
+            countdown
+                ? countdown.shake || 0
+                : 0;
+
+        if (shake > 0) {
+
+            const offsetX =
+                (Math.random() * 2 - 1) * shake;
+
+            const offsetY =
+                (Math.random() * 2 - 1) * shake;
+
+            this.ctx.save();
+
+            this.ctx.translate(offsetX, offsetY);
+
+        }
+
         // ชั้นที่ 1
         this.drawBackground();
 
@@ -36,7 +57,7 @@ class MazeRenderer {
         }
 
         // ชั้นที่ 4
-        this.drawStart(maze);
+        this.drawStart(maze, countdown);
 
         // ชั้นที่ 5
         this.drawGoal(maze);
@@ -45,6 +66,18 @@ class MazeRenderer {
         if (typeof players !== "undefined") {
 
             this.drawPlayers(players);
+
+        }
+
+        if (shake > 0) {
+
+            this.ctx.restore();
+
+        }
+
+        if (countdown) {
+
+            this.drawCountdownFlash(countdown);
 
         }
 
@@ -153,7 +186,7 @@ class MazeRenderer {
 
     //==================================================
 
-    drawStart(maze) {
+    drawStart(maze, countdown = null) {
 
         const cell = maze.start;
 
@@ -169,13 +202,21 @@ class MazeRenderer {
 
         ctx.save();
 
+        const flashBoost =
+            countdown
+                ? 1 + (countdown.flash || 0) * 1.6
+                : 1;
+
         // glow
-        ctx.shadowBlur = 18;
+        ctx.shadowBlur = 18 * flashBoost;
         ctx.shadowColor = "#69F0AE";
 
         ctx.beginPath();
         ctx.roundRect(cx - r, cy - r, r * 2, r * 2, r * 0.3);
-        ctx.fillStyle = "#1B5E20";
+        ctx.fillStyle =
+            countdown
+                ? `rgba(27,94,32,${0.78 + (countdown.flash || 0) * 0.2})`
+                : "#1B5E20";
         ctx.fill();
         ctx.strokeStyle = "#69F0AE";
         ctx.lineWidth = 2;
@@ -188,6 +229,49 @@ class MazeRenderer {
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#ffffff";
         ctx.fillText("🚦", cx, cy);
+
+        ctx.restore();
+
+    }
+
+    //==================================================
+    // Start Countdown Flash
+    //==================================================
+
+    drawCountdownFlash(countdown) {
+
+        if (!countdown)
+            return;
+
+        const ctx = this.ctx;
+
+        const w = this.canvas.width;
+
+        const h = this.canvas.height;
+
+        const pulse = countdown.flash || 0;
+
+        ctx.save();
+
+        ctx.fillStyle = `rgba(255,255,255,${0.08 + pulse * 0.18})`;
+        ctx.fillRect(0, 0, w, h);
+
+        const scale = 1 + pulse * 0.22;
+
+        ctx.translate(w / 2, h * 0.2);
+        ctx.scale(scale, scale);
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 72px Segoe UI";
+        ctx.fillStyle = `rgba(255,255,255,${0.82 + pulse * 0.16})`;
+        ctx.strokeStyle = `rgba(16,16,16,${0.45 + pulse * 0.25})`;
+        ctx.lineWidth = 5;
+
+        const text = String(countdown.value);
+
+        ctx.strokeText(text, 0, 0);
+        ctx.fillText(text, 0, 0);
 
         ctx.restore();
 
