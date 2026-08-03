@@ -94,16 +94,27 @@ class SoundEffects {
 
 		this.lastMoveAt = nowMs;
 
-		const jitter = (Math.random() - 0.5) * 30;
+		const jitter = (Math.random() - 0.5) * 24;
 
 		this.tone({
+			type: "sine",
+			freq: 980 + jitter,
+			freqTo: 560 + jitter * 0.2,
+			duration: 0.085,
+			volume: 0.317,
+			attack: 0.0515,
+			release: 0.165
+		});
+
+		// tiny bright click to feel like a water droplet hit
+		this.tone({
 			type: "triangle",
-			freq: 360 + jitter,
-			freqTo: 280 + jitter * 0.3,
-			duration: 0.065,
-			volume: 0.07,
-			attack: 0.002,
-			release: 0.045
+			freq: 1350 + jitter * 0.3,
+			freqTo: 900,
+			duration: 0.028,
+			volume: 0.036,
+			attack: 0.001,
+			release: 0.02
 		});
 
 	}
@@ -117,8 +128,8 @@ class SoundEffects {
 			freq: 900 + jitter,
 			freqTo: 860 + jitter,
 			duration: 0.11,
-			volume: 0.11,
-			attack: 0.002,
+			volume: 0.71,
+			attack: 0.502,
 			release: 0.06
 		});
 
