@@ -109,14 +109,95 @@ class MazeRenderer {
 
         const ctx = this.ctx;
 
-        ctx.fillStyle = "#ffffff";
+        const w = this.canvas.width;
 
-        ctx.fillRect(
-            0,
-            0,
-            this.canvas.width,
-            this.canvas.height
+        const h = this.canvas.height;
+
+        const s = this.cellSize;
+
+        const gradient = ctx.createLinearGradient(0, 0, w, h);
+
+        gradient.addColorStop(0, "#fcf8ef");
+        gradient.addColorStop(0.5, "#f2eadb");
+        gradient.addColorStop(1, "#e4d8c2");
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
+
+        const glow = ctx.createRadialGradient(
+            w * 0.35,
+            h * 0.28,
+            10,
+            w * 0.35,
+            h * 0.28,
+            w * 0.7
         );
+
+        glow.addColorStop(0, "rgba(255,255,255,0.6)");
+        glow.addColorStop(1, "rgba(255,255,255,0)");
+
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.save();
+
+        ctx.strokeStyle = "rgba(88,68,38,0.08)";
+        ctx.lineWidth = 1;
+
+        for (let x = 0; x <= w; x += s) {
+
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, h);
+            ctx.stroke();
+
+        }
+
+        for (let y = 0; y <= h; y += s) {
+
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+
+        }
+
+        ctx.fillStyle = "rgba(120,94,54,0.05)";
+
+        for (let row = 0; row < Math.ceil(h / s); row++) {
+
+            for (let col = 0; col < Math.ceil(w / s); col++) {
+
+                if ((row + col) % 2 !== 0)
+                    continue;
+
+                ctx.fillRect(
+                    col * s,
+                    row * s,
+                    s,
+                    s
+                );
+
+            }
+
+        }
+
+        ctx.restore();
+
+        const vignette = ctx.createRadialGradient(
+            w * 0.5,
+            h * 0.5,
+            Math.min(w, h) * 0.2,
+            w * 0.5,
+            h * 0.5,
+            Math.max(w, h) * 0.72
+        );
+
+        vignette.addColorStop(0, "rgba(0,0,0,0)");
+        vignette.addColorStop(1, "rgba(67,43,20,0.16)");
+
+        ctx.fillStyle = vignette;
+        ctx.fillRect(0, 0, w, h);
 
     }
 
@@ -130,11 +211,14 @@ class MazeRenderer {
 
         ctx.save();
 
-        ctx.strokeStyle = "#202020";
+        ctx.strokeStyle = "#352515";
 
-        ctx.lineWidth = Config.wallWidth;
+        ctx.lineWidth = Config.wallWidth + 1;
 
         ctx.lineCap = "round";
+
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = "rgba(0,0,0,0.25)";
 
         for (const row of maze.grid) {
 
@@ -171,6 +255,46 @@ class MazeRenderer {
 
                     ctx.moveTo(x, y);
                     ctx.lineTo(x, y + s);
+
+                }
+
+                ctx.stroke();
+
+            }
+
+        }
+
+        ctx.restore();
+
+        ctx.save();
+
+        ctx.strokeStyle = "rgba(255,245,224,0.45)";
+
+        ctx.lineWidth = Math.max(1, Config.wallWidth * 0.28);
+
+        ctx.lineCap = "round";
+
+        for (const row of maze.grid) {
+
+            for (const cell of row) {
+
+                const x = cell.col * s;
+
+                const y = cell.row * s;
+
+                ctx.beginPath();
+
+                if (cell.walls.top) {
+
+                    ctx.moveTo(x, y + 0.75);
+                    ctx.lineTo(x + s, y + 0.75);
+
+                }
+
+                if (cell.walls.left) {
+
+                    ctx.moveTo(x + 0.75, y);
+                    ctx.lineTo(x + 0.75, y + s);
 
                 }
 
