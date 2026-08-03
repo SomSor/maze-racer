@@ -1,8 +1,8 @@
 const Config={
 
-    mazeSize:20,
+    mazeSize:10,
 
-    showShortestPath:false,
+    showShortestPath:true,
 
     canvasSize:700,
 
