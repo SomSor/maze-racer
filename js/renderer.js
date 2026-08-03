@@ -105,15 +105,59 @@ class MazeRenderer {
 
     //==================================================
 
+    getBoardMetrics() {
+
+        const sidePad = 52;
+
+        const topPad = 52;
+
+        const bottomPad = 52;
+
+        const availableWidth =
+            this.canvas.width - sidePad * 2;
+
+        const availableHeight =
+            this.canvas.height - topPad - bottomPad;
+
+        const cellSize = Math.min(
+            availableWidth / Config.mazeSize,
+            availableHeight / Config.mazeSize
+        );
+
+        const boardWidth = cellSize * Config.mazeSize;
+
+        const boardHeight = cellSize * Config.mazeSize;
+
+        const offsetX =
+            (this.canvas.width - boardWidth) / 2;
+
+        const offsetY = topPad;
+
+        this.cellSize = cellSize;
+
+        return {
+            cellSize,
+            boardWidth,
+            boardHeight,
+            offsetX,
+            offsetY
+        };
+
+    }
+
+    //==================================================
+
     drawBackground() {
 
         const ctx = this.ctx;
+
+        const metrics = this.getBoardMetrics();
 
         const w = this.canvas.width;
 
         const h = this.canvas.height;
 
-        const s = this.cellSize;
+        const s = metrics.cellSize;
 
         const gradient = ctx.createLinearGradient(0, 0, w, h);
 
@@ -199,6 +243,46 @@ class MazeRenderer {
         ctx.fillStyle = vignette;
         ctx.fillRect(0, 0, w, h);
 
+        ctx.save();
+
+        ctx.fillStyle = "rgba(74,52,29,0.12)";
+        ctx.beginPath();
+        ctx.roundRect(
+            metrics.offsetX - 10,
+            metrics.offsetY - 10,
+            metrics.boardWidth + 20,
+            metrics.boardHeight + 20,
+            16
+        );
+        ctx.fill();
+
+        const boardGradient = ctx.createLinearGradient(
+            0,
+            metrics.offsetY,
+            0,
+            metrics.offsetY + metrics.boardHeight
+        );
+
+        boardGradient.addColorStop(0, "rgba(255,252,245,0.95)");
+        boardGradient.addColorStop(1, "rgba(244,236,220,0.95)");
+
+        ctx.fillStyle = boardGradient;
+        ctx.beginPath();
+        ctx.roundRect(
+            metrics.offsetX,
+            metrics.offsetY,
+            metrics.boardWidth,
+            metrics.boardHeight,
+            14
+        );
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(103,71,38,0.55)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.restore();
+
     }
 
     //==================================================
@@ -207,7 +291,9 @@ class MazeRenderer {
 
         const ctx = this.ctx;
 
-        const s = this.cellSize;
+        const metrics = this.getBoardMetrics();
+
+        const s = metrics.cellSize;
 
         ctx.save();
 
@@ -224,9 +310,9 @@ class MazeRenderer {
 
             for (const cell of row) {
 
-                const x = cell.col * s;
+                const x = metrics.offsetX + cell.col * s;
 
-                const y = cell.row * s;
+                const y = metrics.offsetY + cell.row * s;
 
                 ctx.beginPath();
 
@@ -278,9 +364,9 @@ class MazeRenderer {
 
             for (const cell of row) {
 
-                const x = cell.col * s;
+                const x = metrics.offsetX + cell.col * s;
 
-                const y = cell.row * s;
+                const y = metrics.offsetY + cell.row * s;
 
                 ctx.beginPath();
 
@@ -314,11 +400,13 @@ class MazeRenderer {
 
         const cell = maze.start;
 
-        const s = this.cellSize;
+        const metrics = this.getBoardMetrics();
 
-        const cx = cell.col * s + s / 2;
+        const s = metrics.cellSize;
 
-        const cy = cell.row * s + s / 2;
+        const cx = metrics.offsetX + cell.col * s + s / 2;
+
+        const cy = metrics.offsetY + cell.row * s + s / 2;
 
         const r = s * 0.38;
 
@@ -407,11 +495,13 @@ class MazeRenderer {
 
         const cell = maze.end;
 
-        const s = this.cellSize;
+        const metrics = this.getBoardMetrics();
 
-        const cx = cell.col * s + s / 2;
+        const s = metrics.cellSize;
 
-        const cy = cell.row * s + s / 2;
+        const cx = metrics.offsetX + cell.col * s + s / 2;
+
+        const cy = metrics.offsetY + cell.row * s + s / 2;
 
         const r = s * 0.38;
 
@@ -455,7 +545,9 @@ class MazeRenderer {
 
         const ctx = this.ctx;
 
-        const s = this.cellSize;
+        const metrics = this.getBoardMetrics();
+
+        const s = metrics.cellSize;
 
         ctx.save();
 
@@ -470,7 +562,12 @@ class MazeRenderer {
 
             ctx.fillStyle = `hsla(${hue}, 85%, 60%, 0.4)`;
 
-            ctx.fillRect(cell.col * s, cell.row * s, s, s);
+            ctx.fillRect(
+                metrics.offsetX + cell.col * s,
+                metrics.offsetY + cell.row * s,
+                s,
+                s
+            );
 
         });
 
@@ -482,15 +579,19 @@ class MazeRenderer {
 
     getCellCenter(cell) {
 
+        const metrics = this.getBoardMetrics();
+
         return {
 
             x:
-                cell.col * this.cellSize +
-                this.cellSize / 2,
+                metrics.offsetX +
+                cell.col * metrics.cellSize +
+                metrics.cellSize / 2,
 
             y:
-                cell.row * this.cellSize +
-                this.cellSize / 2
+                metrics.offsetY +
+                cell.row * metrics.cellSize +
+                metrics.cellSize / 2
 
         };
 
