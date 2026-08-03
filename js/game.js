@@ -583,33 +583,38 @@ class MazeGame {
         const goalCenter =
             renderer.getCellCenter(maze.end);
 
-        const ranking =
-            [...players].sort((a, b) => {
+        const stillRacing =
+            players
+                .filter(p => !p.finished)
+                .sort((a, b) => {
 
-                const aSteps =
-                    this.getRemainingSteps(a);
+                    const aSteps =
+                        this.getRemainingSteps(a);
 
-                const bSteps =
-                    this.getRemainingSteps(b);
+                    const bSteps =
+                        this.getRemainingSteps(b);
 
-                if (aSteps !== bSteps)
-                    return aSteps - bSteps;
+                    if (aSteps !== bSteps)
+                        return aSteps - bSteps;
 
-                const aDirect =
-                    Math.hypot(
-                        a.x - goalCenter.x,
-                        a.y - goalCenter.y
-                    );
+                    const aDirect =
+                        Math.hypot(
+                            a.x - goalCenter.x,
+                            a.y - goalCenter.y
+                        );
 
-                const bDirect =
-                    Math.hypot(
-                        b.x - goalCenter.x,
-                        b.y - goalCenter.y
-                    );
+                    const bDirect =
+                        Math.hypot(
+                            b.x - goalCenter.x,
+                            b.y - goalCenter.y
+                        );
 
-                return aDirect - bDirect;
+                    return aDirect - bDirect;
 
-            });
+                });
+
+        // คนที่ finish แล้วล็อคลำดับตาม finishOrder ไว้ก่อน
+        const ranking = [...this.finishOrder, ...stillRacing];
 
         ranking.forEach((player, index) => {
 
