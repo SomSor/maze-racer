@@ -265,6 +265,9 @@ class AIManager {
 
         for (const p of players) {
 
+            if (p.isHuman)
+                continue;
+
             this.list.push(
                 new MazeAI(p)
             );

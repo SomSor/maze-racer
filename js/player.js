@@ -4,9 +4,11 @@
 
 class Player {
 
-    constructor(name, startCell) {
+    constructor(name, startCell, options = {}) {
 
         this.name = name.trim();
+
+        this.isHuman = !!options.isHuman;
 
         this.cell = startCell;
 
@@ -29,7 +31,10 @@ class Player {
 
         this.emoji = "🙂";
 
-        this.speed = this.randomSpeed();
+        this.speed =
+            this.isHuman
+                ? Config.humanSpeed
+                : this.randomSpeed();
 
         this.speedTimer = 0;
 
@@ -57,6 +62,8 @@ class Player {
             600 + Math.random() * 400;
 
         this.waitTimer = 0;
+
+        this.queuedDirection = null;
 
     }
 
@@ -91,9 +98,19 @@ class Player {
 
         }
 
-        this.updateSpeed(dt);
+        if (this.isHuman) {
+
+            this.updateHuman();
+
+        } else {
+
+            this.updateSpeed(dt);
+
+        }
 
         this.move(dt);
+
+        this.updateHumanFinish();
 
         this.animate(dt);
 
@@ -102,6 +119,9 @@ class Player {
     }
 
     updateSpeed(dt) {
+
+        if (this.isHuman)
+            return;
 
         this.speedTimer += dt;
 
@@ -131,6 +151,74 @@ class Player {
         this.x += dx / dist * Math.min(move, dist);
 
         this.y += dy / dist * Math.min(move, dist);
+
+    }
+
+    isAtTarget() {
+
+        return (
+            Math.abs(this.x - this.targetX) < 1 &&
+            Math.abs(this.y - this.targetY) < 1
+        );
+
+    }
+
+    queueMove(direction) {
+
+        if (!this.isHuman || this.finished)
+            return;
+
+        this.queuedDirection = direction;
+
+    }
+
+    updateHuman() {
+
+        if (!this.isHuman)
+            return;
+
+        if (!this.isAtTarget())
+            return;
+
+        if (this.state !== "running") {
+
+            this.state = "running";
+
+        }
+
+        if (!this.queuedDirection)
+            return;
+
+        if (!maze.canMove(this.cell, this.queuedDirection))
+            return;
+
+        const next =
+            maze.getNeighbor(
+                this.cell,
+                this.queuedDirection
+            );
+
+        if (!next)
+            return;
+
+        this.setTarget(next);
+
+    }
+
+    updateHumanFinish() {
+
+        if (
+            !this.isHuman ||
+            this.finished ||
+            !this.isAtTarget() ||
+            this.cell !== maze.end
+        ) {
+            return;
+        }
+
+        this.finish(
+            players.filter(p => p.finished).length + 1
+        );
 
     }
 
@@ -263,20 +351,33 @@ class PlayerManager {
 
     }
 
-    createPlayers(names, startCell) {
+    createPlayers(names, startCell, options = {}) {
 
         players.length = 0;
 
+        const humanIndex =
+            Number.isInteger(options.humanIndex)
+                ? options.humanIndex
+                : -1;
+
         const usedColors = [];
 
-        for (const rawName of names) {
+        for (let index = 0; index < names.length; index++) {
+
+            const rawName = names[index];
 
             const name = rawName.trim();
 
             if (!name)
                 continue;
 
-            const p = new Player(name, startCell);
+            const p = new Player(
+                name,
+                startCell,
+                {
+                    isHuman: index === humanIndex
+                }
+            );
 
             // พยายามไม่ให้สีซ้ำติดกัน
             let retry = 0;
