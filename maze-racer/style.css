@@ -158,6 +158,18 @@ body{
 
 }
 
+.controlHint{
+
+    margin:0 0 12px;
+
+    color:#b9c7d9;
+
+    font-size:13px;
+
+    line-height:1.45;
+
+}
+
 .configRow input[type="number"]{
 
     width:90px;

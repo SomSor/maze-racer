@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>วงล้อสุ่มชื่อ</title>
+  <style>
+    :root {
+      --ink: #14213d;
+      --muted: #64748b;
+      --paper: #fffdf7;
+      --mint: #d5f5e3;
+      --coral: #f06449;
+      --yellow: #f7c548;
+      --sky: #62b6cb;
+      --line: #d9e1e8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: "Noto Sans Thai", Tahoma, sans-serif;
+      background-color: #f4f7f3;
+      background-image: radial-gradient(#cbd9d0 1px, transparent 1px);
+      background-size: 18px 18px;
+    }
+
+    .app {
+      width: min(1160px, calc(100% - 32px));
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 28px 0 44px;
+      display: grid;
+      grid-template-columns: minmax(260px, 350px) minmax(0, 1fr);
+      gap: 28px;
+      align-items: center;
+    }
+
+    .panel {
+      padding: 24px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: 8px 8px 0 var(--ink);
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--coral);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    h1, h2, p { margin-top: 0; }
+    h1 {
+      margin-bottom: 8px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 38px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .hint { margin-bottom: 18px; color: var(--muted); line-height: 1.6; }
+
+    label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 800; }
+
+    textarea {
+      width: 100%;
+      height: 210px;
+      resize: vertical;
+      padding: 13px;
+      border: 2px solid var(--ink);
+      border-radius: 4px;
+      color: var(--ink);
+      font: inherit;
+      line-height: 1.6;
+      background: #fff;
+      outline: none;
+    }
+    textarea:focus { box-shadow: 4px 4px 0 var(--sky); }
+
+    .count { min-height: 21px; margin: 7px 0 18px; color: var(--muted); font-size: 13px; }
+
+    .roster {
+      margin: 0 0 18px;
+      border: 2px solid var(--ink);
+      border-radius: 4px;
+      background: #fff;
+    }
+    .roster h2 {
+      margin: 0;
+      padding: 11px 13px;
+      border-bottom: 2px solid var(--ink);
+      font-size: 16px;
+      line-height: 1.3;
+      background: var(--mint);
+    }
+    .roster-list {
+      min-height: 58px;
+      margin: 0;
+      padding: 11px 13px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 12px;
+      overflow: visible;
+      list-style: none;
+    }
+    .roster-list li {
+      min-width: 0;
+      overflow: hidden;
+      font-size: 15px;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .roster-list .is-eliminated { color: var(--muted); text-decoration: line-through; }
+    .roster-empty { color: var(--muted); font-size: 13px; }
+
+    button {
+      width: 100%;
+      min-height: 49px;
+      border: 2px solid var(--ink);
+      border-radius: 4px;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    button:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--ink); }
+    button:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: none; }
+    button:disabled { cursor: wait; opacity: .65; }
+    #startButton { background: var(--yellow); }
+    #clearButton { margin-top: 11px; min-height: 38px; background: transparent; font-size: 13px; }
+
+    .stage { min-width: 0; text-align: center; }
+    .status { min-height: 25px; margin: 0 0 18px; font-weight: 800; }
+    .carousel-wrap {
+      position: relative;
+      width: min(68vw, 540px);
+      aspect-ratio: 1;
+      margin: auto;
+      display: grid;
+      place-items: center;
+    }
+
+    .wheel {
+      position: relative;
+      width: 92%;
+      height: 92%;
+      border: 4px solid var(--ink);
+      border-radius: 50%;
+      background: conic-gradient(from 20deg, var(--mint), #fff 0 60deg, #ffd5ca 0 120deg, #fff 0 180deg, #d7eff4 0 240deg, #fff 0 300deg, #ffe7a6 0);
+      box-shadow: 8px 8px 0 rgba(20, 33, 61, .22);
+    }
+    .wheel::after {
+      position: absolute;
+      content: "";
+      inset: 15%;
+      border: 2px dashed rgba(20, 33, 61, .28);
+      border-radius: 50%;
+    }
+    .wheel.spinning { animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .name-chip {
+      position: absolute;
+      z-index: 2;
+      top: 50%;
+      left: 50%;
+      width: clamp(64px, var(--chip-width, 20%), 105px);
+      min-height: 54px;
+      padding: 17px 8px 7px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 2px solid var(--ink);
+      border-radius: 4px;
+      color: var(--ink);
+      font-size: clamp(11px, 2vw, 14px);
+      font-weight: 800;
+      line-height: 1.15;
+      text-align: center;
+      background: #fff;
+      transform: translate(-50%, -50%) rotate(var(--tilt));
+    }
+    .pin {
+      position: absolute;
+      top: 5px;
+      left: 50%;
+      width: 15px;
+      height: 15px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--coral);
+      box-shadow: 1px 1px 0 var(--ink);
+      transform: translateX(-50%);
+    }
+    .pin::after {
+      position: absolute;
+      top: 10px;
+      left: 5px;
+      width: 2px;
+      height: 10px;
+      content: "";
+      background: var(--ink);
+      transform: rotate(12deg);
+      transform-origin: top;
+    }
+    .name-chip.champion { background: var(--yellow); box-shadow: 3px 3px 0 var(--ink); }
+
+    .escaped-name {
+      position: fixed;
+      z-index: 10;
+      width: min(105px, calc(100vw - 32px));
+      opacity: 0;
+      pointer-events: none;
+      transition: left .65s cubic-bezier(.18, .88, .28, 1.15), top .65s cubic-bezier(.18, .88, .28, 1.15), transform .65s cubic-bezier(.18, .88, .28, 1.15), opacity .2s ease;
+    }
+    .escaped-name.show { opacity: 1; }
+
+    @media (max-width: 760px) {
+      .app { padding-top: 22px; grid-template-columns: 1fr; gap: 32px; }
+      .panel { max-width: 520px; width: calc(100% - 8px); margin: auto; }
+      .carousel-wrap { width: min(86vw, 470px); }
+      textarea { height: 155px; }
+      h1 { font-size: 34px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="panel" aria-labelledby="pageTitle">
+      <p class="eyebrow">Name carousel</p>
+      <h1 id="pageTitle">วงล้อสุ่มชื่อ</h1>
+      <p class="hint">ใส่ชื่อคนละหนึ่งบรรทัด แล้วปล่อยให้ม้าหมุนตัดสิน</p>
+      <label for="namesInput">รายชื่อผู้ร่วมลุ้น</label>
+      <textarea id="namesInput" placeholder="มะลิ&#10;นนท์&#10;พิม&#10;ต้น"></textarea>
+      <p class="count" id="nameCount">ยังไม่มีรายชื่อ</p>
+      <section class="roster" aria-labelledby="rosterTitle">
+        <h2 id="rosterTitle">รายชื่อในวงล้อ</h2>
+        <ul class="roster-list" id="rosterList"></ul>
+      </section>
+      <button id="startButton" type="button">เริ่มสุ่ม</button>
+      <button id="clearButton" type="button">ล้างรายชื่อ</button>
+    </section>
+
+    <section class="stage" aria-live="polite">
+      <p class="status" id="status">เพิ่มรายชื่อเพื่อเริ่มวงล้อ</p>
+      <div class="carousel-wrap">
+        <div class="wheel" id="wheel" aria-label="วงล้อรายชื่อ"></div>
+      </div>
+    </section>
+  </main>
+  <div id="escapedNames" aria-live="polite"></div>
+
+  <script>
+    const namesInput = document.querySelector('#namesInput');
+    const nameCount = document.querySelector('#nameCount');
+    const startButton = document.querySelector('#startButton');
+    const clearButton = document.querySelector('#clearButton');
+    const wheel = document.querySelector('#wheel');
+    const status = document.querySelector('#status');
+    const escapedNames = document.querySelector('#escapedNames');
+    const rosterList = document.querySelector('#rosterList');
+    let isSpinning = false;
+    let displayedParticipants = [];
+    let roundParticipants = [];
+    let remainingParticipants = [];
+    let escapedPositions = [];
+
+    function getNames() {
+      return namesInput.value.split('\n').map((name) => name.trim()).filter(Boolean);
+    }
+
+    function getBestChipPosition(occupiedPositions) {
+      let bestPosition;
+      let greatestDistance = -1;
+      for (let sample = 0; sample < 180; sample += 1) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.sqrt(Math.random()) * 37;
+        const candidate = {
+          left: 50 + Math.cos(angle) * radius,
+          top: 50 + Math.sin(angle) * radius
+        };
+        const nearestDistance = occupiedPositions.length
+          ? Math.min(...occupiedPositions.map((position) => Math.hypot(
+            candidate.left - position.left,
+            candidate.top - position.top
+          )))
+          : Number.POSITIVE_INFINITY;
+        if (nearestDistance > greatestDistance) {
+          bestPosition = candidate;
+          greatestDistance = nearestDistance;
+        }
+      }
+      return bestPosition;
+    }
+
+    function createParticipants(names) {
+      const chipPositions = [];
+      const chipWidth = names.length > 12 ? '14%' : names.length > 8 ? '16%' : names.length > 5 ? '18%' : '20%';
+      return names.slice(0, 16).map((name, index) => {
+        const position = getBestChipPosition(chipPositions);
+        chipPositions.push(position);
+        return {
+          id: index,
+          name,
+          position,
+          chipWidth,
+          tilt: -8 + Math.random() * 16
+        };
+      });
+    }
+
+    function updateRoster(participants) {
+      rosterList.replaceChildren();
+      if (!participants.length) {
+        const emptyMessage = document.createElement('li');
+        emptyMessage.className = 'roster-empty';
+        emptyMessage.textContent = 'รอรายชื่อ';
+        rosterList.append(emptyMessage);
+        return;
+      }
+      participants.forEach((participant) => {
+        const item = document.createElement('li');
+        item.textContent = participant.name;
+        if (participant.eliminated) item.classList.add('is-eliminated');
+        rosterList.append(item);
+      });
+    }
+
+    function updateWheel(participants) {
+      const activeParticipants = participants ?? createParticipants(getNames());
+      const enteredNames = getNames();
+      nameCount.textContent = enteredNames.length ? `ทั้งหมด ${enteredNames.length} รายชื่อ` : 'ยังไม่มีรายชื่อ';
+      wheel.querySelectorAll('.name-chip').forEach((chip) => chip.remove());
+      displayedParticipants = activeParticipants;
+      if (!isSpinning) updateRoster(activeParticipants);
+      activeParticipants.forEach((participant) => {
+        const chip = document.createElement('div');
+        chip.className = 'name-chip';
+        chip.style.left = `${participant.position.left}%`;
+        chip.style.top = `${participant.position.top}%`;
+        chip.style.setProperty('--chip-width', participant.chipWidth);
+        chip.style.setProperty('--tilt', `${participant.tilt}deg`);
+        chip.textContent = participant.name;
+        const pin = document.createElement('span');
+        pin.className = 'pin';
+        pin.setAttribute('aria-hidden', 'true');
+        chip.append(pin);
+        if (activeParticipants.length === 1) chip.classList.add('champion');
+        wheel.append(chip);
+      });
+    }
+
+    function getBestEscapePosition() {
+      const cardWidth = Math.min(105, window.innerWidth - 32);
+      const cardHeight = 54;
+      const wheelBounds = wheel.getBoundingClientRect();
+      const rosterBounds = rosterList.closest('.roster').getBoundingClientRect();
+      let bestPosition;
+      let greatestDistance = -1;
+      for (let sample = 0; sample < 160; sample += 1) {
+        const candidate = {
+          left: 16 + Math.random() * Math.max(0, window.innerWidth - cardWidth - 32),
+          top: 16 + Math.random() * Math.max(0, window.innerHeight - cardHeight - 32)
+        };
+        const overlapsWheel = candidate.left < wheelBounds.right + 16
+          && candidate.left + cardWidth > wheelBounds.left - 16
+          && candidate.top < wheelBounds.bottom + 16
+          && candidate.top + cardHeight > wheelBounds.top - 16;
+        const overlapsRoster = candidate.left < rosterBounds.right + 16
+          && candidate.left + cardWidth > rosterBounds.left - 16
+          && candidate.top < rosterBounds.bottom + 16
+          && candidate.top + cardHeight > rosterBounds.top - 16;
+        if (overlapsWheel || overlapsRoster) continue;
+        const nearestDistance = escapedPositions.length
+          ? Math.min(...escapedPositions.map((position) => Math.hypot(
+            candidate.left - position.left,
+            candidate.top - position.top
+          )))
+          : Number.POSITIVE_INFINITY;
+        if (nearestDistance > greatestDistance) {
+          bestPosition = candidate;
+          greatestDistance = nearestDistance;
+        }
+      }
+      return bestPosition ?? { left: 16, top: 16 };
+    }
+
+    function sendEliminatedNameToScreen(name) {
+      const position = getBestEscapePosition();
+      escapedPositions.push(position);
+      const card = document.createElement('div');
+      card.className = 'name-chip escaped-name';
+      card.textContent = name;
+      const pin = document.createElement('span');
+      pin.className = 'pin';
+      pin.setAttribute('aria-hidden', 'true');
+      card.append(pin);
+      card.style.left = '50%';
+      card.style.top = '50%';
+      card.style.transform = 'translate(-50%, -50%) scale(.55) rotate(0deg)';
+      escapedNames.append(card);
+      window.setTimeout(() => {
+        card.classList.add('show');
+        card.style.left = `${position.left}px`;
+        card.style.top = `${position.top}px`;
+        card.style.transform = `rotate(${-5 + Math.random() * 10}deg)`;
+      }, 30);
+    }
+
+    function stopWheelAtStartingAngle(onStopped) {
+      const transform = getComputedStyle(wheel).transform;
+      const matrixMatch = transform.match(/^matrix\((.+)\)$/);
+      let currentAngle = 0;
+      if (matrixMatch) {
+        const matrixValues = matrixMatch[1].split(',').map(Number);
+        currentAngle = Math.atan2(matrixValues[1], matrixValues[0]) * (180 / Math.PI);
+        if (currentAngle < 0) currentAngle += 360;
+      }
+      wheel.classList.remove('spinning');
+      wheel.style.transition = 'none';
+      wheel.style.transform = `rotate(${currentAngle}deg)`;
+      void wheel.offsetWidth;
+      wheel.style.transition = 'transform 1s cubic-bezier(.2, .8, .2, 1)';
+      wheel.style.transform = 'rotate(360deg)';
+      window.setTimeout(() => {
+        wheel.style.transition = '';
+        wheel.style.transform = '';
+        onStopped();
+      }, 1000);
+    }
+
+    function eliminateNextName() {
+      const selectedIndex = Math.floor(Math.random() * remainingParticipants.length);
+      const selectedParticipant = remainingParticipants[selectedIndex];
+      const eliminationDelay = 500 + Math.random() * 1000;
+      status.textContent = 'ม้าหมุนกำลังหมุน...';
+      window.setTimeout(() => {
+        selectedParticipant.eliminated = true;
+        remainingParticipants.splice(selectedIndex, 1);
+        updateWheel(remainingParticipants);
+        updateRoster(roundParticipants);
+        sendEliminatedNameToScreen(selectedParticipant.name);
+        if (remainingParticipants.length === 1) {
+          const champion = remainingParticipants[0].name;
+          status.textContent = `เหลือ ${champion} คนสุดท้าย...`;
+          stopWheelAtStartingAngle(() => {
+            status.textContent = `ผู้ชนะคือ ${champion}!`;
+            startButton.textContent = 'เริ่มรอบใหม่';
+            startButton.disabled = false;
+            namesInput.disabled = false;
+            isSpinning = false;
+          });
+          return;
+        }
+        status.textContent = `เหลืออีก ${remainingParticipants.length} คน`;
+        eliminateNextName();
+      }, eliminationDelay);
+    }
+
+    function startSpin() {
+      const names = getNames();
+      if (names.length < 2) {
+        status.textContent = 'เพิ่มอย่างน้อย 2 รายชื่อก่อนเริ่มสุ่ม';
+        namesInput.focus();
+        return;
+      }
+      isSpinning = true;
+      remainingParticipants = displayedParticipants.length === names.length
+        ? [...displayedParticipants]
+        : createParticipants(names);
+      roundParticipants = [...remainingParticipants];
+      roundParticipants.forEach((participant) => { participant.eliminated = false; });
+      updateRoster(roundParticipants);
+      escapedPositions = [];
+      escapedNames.replaceChildren();
+      startButton.disabled = true;
+      namesInput.disabled = true;
+      wheel.classList.remove('spinning');
+      void wheel.offsetWidth;
+      wheel.classList.add('spinning');
+      eliminateNextName();
+    }
+
+    namesInput.addEventListener('input', () => { if (!isSpinning) updateWheel(); });
+    startButton.addEventListener('click', startSpin);
+    clearButton.addEventListener('click', () => {
+      if (isSpinning) return;
+      namesInput.value = '';
+      remainingParticipants = [];
+      roundParticipants = [];
+      escapedPositions = [];
+      escapedNames.replaceChildren();
+      status.textContent = 'เพิ่มรายชื่อเพื่อเริ่มวงล้อ';
+      startButton.textContent = 'เริ่มสุ่ม';
+      updateWheel();
+      namesInput.focus();
+    });
+    updateWheel();
+  </script>
+</body>
+</html>

@@ -1,142 +1,124 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maze Race</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>เกมสนุก</title>
+    <style>
+        :root {
+            --ink: #172033;
+            --paper: #fffdf6;
+            --sun: #ffd447;
+            --coral: #f06b4f;
+            --sky: #9ee6e8;
+            --line: #172033;
+        }
 
-    <link rel="stylesheet" href="style.css">
+        * { box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            color: var(--ink);
+            font-family: Tahoma, "Noto Sans Thai", sans-serif;
+            background-color: #dff5ee;
+            background-image: linear-gradient(rgba(23, 32, 51, .1) 1px, transparent 1px), linear-gradient(90deg, rgba(23, 32, 51, .1) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+
+        main {
+            width: min(880px, calc(100% - 32px));
+            padding: 42px 0;
+        }
+
+        header { margin-bottom: 28px; }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            color: var(--coral);
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(38px, 7vw, 68px);
+            font-weight: 800;
+            letter-spacing: 0;
+            line-height: 1;
+        }
+
+        .subtitle { margin: 13px 0 0; font-size: 17px; line-height: 1.6; }
+
+        .games {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
+        }
+
+        .game-link {
+            min-height: 280px;
+            padding: 26px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            border: 3px solid var(--line);
+            border-radius: 8px;
+            color: inherit;
+            text-decoration: none;
+            box-shadow: 8px 8px 0 var(--line);
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+
+        .game-link:hover, .game-link:focus-visible {
+            transform: translate(-4px, -4px);
+            box-shadow: 12px 12px 0 var(--line);
+        }
+
+        .game-link:focus-visible { outline: 3px solid var(--coral); outline-offset: 4px; }
+        .maze { background: var(--sun); }
+        .wheel { background: var(--sky); }
+
+        .game-icon { font-size: 58px; line-height: 1; }
+        h2 { margin: 24px 0 8px; font-size: 27px; line-height: 1.2; }
+        .game-link p { margin: 0; font-size: 16px; line-height: 1.55; }
+        .open { margin-top: auto; padding-top: 26px; font-size: 14px; font-weight: 800; }
+
+        @media (max-width: 620px) {
+            main { padding: 28px 0; }
+            .games { grid-template-columns: 1fr; }
+            .game-link { min-height: 230px; }
+        }
+    </style>
 </head>
-
 <body>
+    <main>
+        <header>
+            <p class="eyebrow">เลือกเกม</p>
+            <h1>เกมสนุก</h1>
+            <p class="subtitle">เลือกเกมที่ต้องการเล่นได้เลย</p>
+        </header>
 
-<div id="container">
+        <section class="games" aria-label="รายการเกม">
+            <a class="game-link maze" href="maze-racer/index.html" target="_blank" rel="noopener">
+                <span class="game-icon" aria-hidden="true">🏁</span>
+                <h2>Maze Race</h2>
+                <p>แข่งกันหาทางออกจากเขาวงกต</p>
+                <span class="open">เปิดเกมในแท็บใหม่ ↗</span>
+            </a>
 
-    <div id="leftPanel">
-
-        <canvas id="mazeCanvas"></canvas>
-
-        <button id="btnPodiumOk" style="display:none;">✅ ตกลง</button>
-
-    </div>
-
-    <div id="rightPanel">
-
-        <h2>Maze Race</h2>
-
-        <div class="configPanel">
-
-            <label class="configRow" for="mazeSizeInput">
-                <span>Maze Size</span>
-                <input id="mazeSizeInput" type="number" min="5" max="60" step="1" value="20">
-            </label>
-
-            <label class="configRow configToggle" for="toggleShortestPath">
-                <input id="toggleShortestPath" type="checkbox">
-                <span>Show Shortest Path</span>
-            </label>
-
-            <label class="configRow configToggle" for="toggleNoRevisit">
-                <input id="toggleNoRevisit" type="checkbox">
-                <span>No Revisit (apply on Start)</span>
-            </label>
-
-            <div class="configRow">
-                <span>Speed Range</span>
-                <div class="sliderGroup">
-                    <div class="dualRange" id="speedDualRange">
-                        <div class="dualRangeTrack"></div>
-                        <div class="dualRangeFill" id="speedRangeFill"></div>
-                        <input id="speedMinInput" type="range" min="1" max="20" step="1" value="2">
-                        <input id="speedMaxInput" type="range" min="1" max="20" step="1" value="5">
-                    </div>
-                    <span id="speedRangeVal">2-5</span>
-                </div>
-            </div>
-
-            <div class="configRow">
-                <span>Thinking Range</span>
-                <div class="sliderGroup">
-                    <div class="dualRange" id="thinkingDualRange">
-                        <div class="dualRangeTrack"></div>
-                        <div class="dualRangeFill" id="thinkingRangeFill"></div>
-                        <input id="thinkingMinInput" type="range" min="0" max="3000" step="100" value="0">
-                        <input id="thinkingMaxInput" type="range" min="0" max="3000" step="100" value="1000">
-                    </div>
-                    <span id="thinkingRangeVal">0-1000</span>
-                </div>
-            </div>
-
-        </div>
-
-        <textarea id="playerNames" placeholder="One player per line">นิว
-นิ
-กัปตัน
-ท็อป
-โปเต้
-หวาน
-ปุ๋ย
-อู
-โจ้
-ออ
-เบิร์ด
-เต้
-เอิร์น
-เก้น
-เอ้
-พี
-เปา
-โต
-โชค
-ดรีม
-ตี๋
-เอก</textarea>
-
-        <div class="buttonGroup">
-            <button id="btnRandom">🎲 Random Maze</button>
-            <button id="btnShuffle">🔀 Shuffle Names + Emoji</button>
-            <button id="btnStart">▶ Start Game</button>
-        </div>
-
-        <div id="leaderboard">
-
-            <div id="raceTimer" aria-live="polite">⏱ 00:00.000</div>
-
-            <div class="boardColumns">
-
-                <div class="boardBlock">
-
-                    <h3>Leaderboard</h3>
-
-                    <ol id="ranking"></ol>
-
-                </div>
-
-                <div class="boardBlock">
-
-                    <h3>Racer List</h3>
-
-                    <ol id="racerList"></ol>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-<script src="js/config.js"></script>
-<script src="js/maze.js"></script>
-<script src="js/renderer.js"></script>
-<script src="js/player.js"></script>
-<script src="js/ai.js"></script>
-<script src="js/effects.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/game.js"></script>
-<script src="js/main.js"></script>
-
+            <a class="game-link wheel" href="wheel-plate/index.html" target="_blank" rel="noopener">
+                <span class="game-icon" aria-hidden="true">🎡</span>
+                <h2>วงล้อสุ่มชื่อ</h2>
+                <p>สุ่มเลือกชื่อจากรายชื่อผู้เล่น</p>
+                <span class="open">เปิดเกมในแท็บใหม่ ↗</span>
+            </a>
+        </section>
+    </main>
 </body>
 </html>

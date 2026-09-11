@@ -40,6 +40,8 @@ class MazeGame {
 
         this.timerEl = null;
 
+        this.humanModeEnabled = false;
+
         this.bindUI();
 
         this.newMaze();
@@ -90,6 +92,11 @@ class MazeGame {
                 "click",
                 () => this.start()
             );
+
+        window.addEventListener(
+            "keydown",
+            event => this.handleKeydown(event)
+        );
 
         document
             .getElementById("btnShuffle")
@@ -303,6 +310,22 @@ class MazeGame {
         const toggleNoRevisit = document.getElementById("toggleNoRevisit");
         toggleNoRevisit.checked = !!Config.noRevisit;
 
+        const toggleHumanPlayer =
+            document.getElementById("toggleHumanPlayer");
+
+        this.humanModeEnabled =
+            !!toggleHumanPlayer.checked;
+
+        toggleHumanPlayer.addEventListener(
+            "change",
+            () => {
+
+                this.humanModeEnabled =
+                    toggleHumanPlayer.checked;
+
+            }
+        );
+
     }
 
     //--------------------------------------------------
@@ -394,7 +417,13 @@ class MazeGame {
 
         playerManager.createPlayers(
             names,
-            maze.start
+            maze.start,
+            {
+                humanIndex:
+                    this.humanModeEnabled
+                        ? 0
+                        : -1
+            }
         );
 
         const hasPreviewPairing =
@@ -467,6 +496,57 @@ class MazeGame {
         this.lastTime = performance.now();
 
         this.loop(this.lastTime);
+
+    }
+
+    //--------------------------------------------------
+
+    getHumanPlayer() {
+
+        return players.find(
+            player => player.isHuman
+        ) || null;
+
+    }
+
+    //--------------------------------------------------
+
+    handleKeydown(event) {
+
+        const keyMap = {
+            ArrowUp: "top",
+            ArrowRight: "right",
+            ArrowDown: "bottom",
+            ArrowLeft: "left",
+            w: "top",
+            d: "right",
+            s: "bottom",
+            a: "left",
+            W: "top",
+            D: "right",
+            S: "bottom",
+            A: "left"
+        };
+
+        const direction = keyMap[event.key];
+
+        if (!direction)
+            return;
+
+        const humanPlayer = this.getHumanPlayer();
+
+        if (
+            !humanPlayer ||
+            !this.running ||
+            this.countdownActive ||
+            this.podiumActive
+        ) {
+            return;
+        }
+
+        event.preventDefault();
+
+        humanPlayer.queueMove(direction);
 
     }
 

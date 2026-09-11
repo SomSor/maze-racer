@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Race</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="container">
+
+    <div id="leftPanel">
+
+        <canvas id="mazeCanvas"></canvas>
+
+        <button id="btnPodiumOk" style="display:none;">✅ ตกลง</button>
+
+    </div>
+
+    <div id="rightPanel">
+
+        <h2>Maze Race</h2>
+
+        <div class="configPanel">
+
+            <label class="configRow" for="mazeSizeInput">
+                <span>Maze Size</span>
+                <input id="mazeSizeInput" type="number" min="5" max="60" step="1" value="20">
+            </label>
+
+            <label class="configRow configToggle" for="toggleShortestPath">
+                <input id="toggleShortestPath" type="checkbox">
+                <span>Show Shortest Path</span>
+            </label>
+
+            <label class="configRow configToggle" for="toggleNoRevisit">
+                <input id="toggleNoRevisit" type="checkbox">
+                <span>No Revisit (apply on Start)</span>
+            </label>
+
+            <label class="configRow configToggle" for="toggleHumanPlayer">
+                <input id="toggleHumanPlayer" type="checkbox" checked>
+                <span>Human Player = first name in list</span>
+            </label>
+
+            <p class="controlHint">Controls: Arrow keys or WASD move the first racer after the countdown.</p>
+
+            <div class="configRow">
+                <span>Speed Range</span>
+                <div class="sliderGroup">
+                    <div class="dualRange" id="speedDualRange">
+                        <div class="dualRangeTrack"></div>
+                        <div class="dualRangeFill" id="speedRangeFill"></div>
+                        <input id="speedMinInput" type="range" min="1" max="20" step="1" value="2">
+                        <input id="speedMaxInput" type="range" min="1" max="20" step="1" value="5">
+                    </div>
+                    <span id="speedRangeVal">2-5</span>
+                </div>
+            </div>
+
+            <div class="configRow">
+                <span>Thinking Range</span>
+                <div class="sliderGroup">
+                    <div class="dualRange" id="thinkingDualRange">
+                        <div class="dualRangeTrack"></div>
+                        <div class="dualRangeFill" id="thinkingRangeFill"></div>
+                        <input id="thinkingMinInput" type="range" min="0" max="3000" step="100" value="0">
+                        <input id="thinkingMaxInput" type="range" min="0" max="3000" step="100" value="1000">
+                    </div>
+                    <span id="thinkingRangeVal">0-1000</span>
+                </div>
+            </div>
+
+        </div>
+
+        <textarea id="playerNames" placeholder="One player per line">นิว
+นิ
+กัปตัน
+ท็อป
+โปเต้
+หวาน
+ปุ๋ย
+อู
+โจ้
+ออ
+เบิร์ด
+เต้
+เอิร์น
+เก้น
+เอ้
+พี
+เปา
+โต
+โชค
+ดรีม
+ตี๋
+เอก</textarea>
+
+        <div class="buttonGroup">
+            <button id="btnRandom">🎲 Random Maze</button>
+            <button id="btnShuffle">🔀 Shuffle Names + Emoji</button>
+            <button id="btnStart">▶ Start Game</button>
+        </div>
+
+        <div id="leaderboard">
+
+            <div id="raceTimer" aria-live="polite">⏱ 00:00.000</div>
+
+            <div class="boardColumns">
+
+                <div class="boardBlock">
+
+                    <h3>Leaderboard</h3>
+
+                    <ol id="ranking"></ol>
+
+                </div>
+
+                <div class="boardBlock">
+
+                    <h3>Racer List</h3>
+
+                    <ol id="racerList"></ol>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/maze.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/player.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/effects.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>

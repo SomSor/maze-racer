@@ -24,6 +24,8 @@ const Config={
 
     speedMax:5,
 
+    humanSpeed:5,
+
     noRevisit:false,
 
     trailLength:40,
