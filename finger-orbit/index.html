@@ -60,7 +60,8 @@
       font-size: 14px;
     }
 
-    #start {
+    #start,
+    #restart {
       position: absolute;
       z-index: 20;
       left: 50%;
@@ -77,7 +78,15 @@
       cursor: pointer;
     }
 
-    #start:active { transform: translate(-50%, -50%) scale(.96); }
+    #start:active,
+    #restart:active { transform: translate(-50%, -50%) scale(.96); }
+
+    #restart {
+      top: auto;
+      bottom: 32px;
+      display: none;
+      background: #f59e0b;
+    }
 
     .hint {
       margin-top: 8px;
@@ -142,6 +151,7 @@
   </div>
 
   <button id="start">📷 เปิดกล้อง</button>
+  <button id="restart">🔄 เริ่มใหม่</button>
 </div>
 
 <!-- MediaPipe Hands -->
@@ -155,6 +165,7 @@
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
   const startBtn = document.getElementById('start');
+  const restartBtn = document.getElementById('restart');
   const statusEl = document.getElementById('status');
   const winnerDialog = document.getElementById('winnerDialog');
   const winnerEmoji = document.getElementById('winnerEmoji');
@@ -170,6 +181,7 @@
   let camera = null;
   let openFingers = 0;
   let lastWinnerAt = 0;
+  let winnerVisible = false;
 
   const fingerPairs = [
     { tip: 8, pip: 6 },
@@ -200,14 +212,19 @@
   }
 
   function showWinnerDialog() {
+    if (winnerVisible) return;
     const pick = emojis[Math.floor(Math.random() * emojis.length)];
     winnerEmoji.textContent = pick;
     winnerText.textContent = 'ผู้ชนะ';
     winnerDialog.classList.add('show');
+    restartBtn.style.display = 'block';
+    winnerVisible = true;
   }
 
   function hideWinnerDialog() {
     winnerDialog.classList.remove('show');
+    restartBtn.style.display = 'none';
+    winnerVisible = false;
   }
 
   // ดาวแต่ละดวงมีวงโคจรและความเร็วต่างกันเล็กน้อย
@@ -308,8 +325,9 @@
   hands.onResults(results => {
     if (!results.multiHandLandmarks || !results.multiHandLandmarks.length) {
       hasFinger = false;
-      hideWinnerDialog();
-      statusEl.textContent = 'ไม่พบมือ — กางมือให้เห็น';
+      if (!winnerVisible) {
+        statusEl.textContent = 'ไม่พบมือ — กางมือให้เห็น';
+      }
       return;
     }
 
@@ -323,6 +341,11 @@
     targetY = thumbTip.y * H;
     hasFinger = true;
 
+    if (winnerVisible) {
+      statusEl.textContent = '✊ ผู้ชนะ! กดเริ่มใหม่เพื่อเล่นต่อ';
+      return;
+    }
+
     if (isFist) {
       const now = Date.now();
       if (now - lastWinnerAt > 1200) {
@@ -331,10 +354,8 @@
       }
       statusEl.textContent = '✊ กำปั้น — ผู้ชนะ!';
     } else if (openFingers >= 5) {
-      hideWinnerDialog();
       statusEl.textContent = '✨ กางมือ 5 นิ้ว — ดาวกำลังโคจร';
     } else {
-      hideWinnerDialog();
       statusEl.textContent = `🖐️ กางมือ ${openFingers}/5 นิ้ว ให้เต็มถึงโชว์ดาว`;
     }
   });
@@ -375,7 +396,16 @@
     }
   }
 
+  function resetRound() {
+    hideWinnerDialog();
+    lastWinnerAt = 0;
+    openFingers = 0;
+    hasFinger = false;
+    statusEl.textContent = 'กางมือแล้วให้เห็นนิ้วโป้งและ 5 นิ้ว 👌';
+  }
+
   startBtn.addEventListener('click', startCamera);
+  restartBtn.addEventListener('click', resetRound);
 
   draw();
 })();
