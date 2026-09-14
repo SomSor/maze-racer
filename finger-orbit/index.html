@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Finger Orbit Emoji</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #050814;
+      font-family: system-ui, sans-serif;
+    }
+
+    #stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      background: #111;
+    }
+
+    #canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    #ui {
+      position: absolute;
+      z-index: 10;
+      left: 50%;
+      top: 18px;
+      transform: translateX(-50%);
+      color: white;
+      text-align: center;
+      text-shadow: 0 2px 8px #000;
+      pointer-events: none;
+    }
+
+    #status {
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(6px);
+      font-size: 14px;
+    }
+
+    #start {
+      position: absolute;
+      z-index: 20;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border: 0;
+      border-radius: 999px;
+      padding: 16px 26px;
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      background: #4f46e5;
+      box-shadow: 0 8px 30px rgba(0,0,0,.35);
+      cursor: pointer;
+    }
+
+    #start:active { transform: translate(-50%, -50%) scale(.96); }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 12px;
+      opacity: .8;
+    }
+
+    #winnerDialog {
+      position: absolute;
+      z-index: 30;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(.9);
+      display: none;
+      min-width: 240px;
+      padding: 26px 28px;
+      border-radius: 24px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 2px solid rgba(255,255,255,0.22);
+      color: white;
+      text-align: center;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+      backdrop-filter: blur(8px);
+    }
+
+    #winnerDialog.show {
+      display: block;
+      animation: winnerPop .25s ease forwards;
+    }
+
+    @keyframes winnerPop {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(.8); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    #winnerEmoji {
+      font-size: 64px;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    #winnerText {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+  </style>
+</head>
+<body>
+<div id="stage">
+  <video id="video" playsinline autoplay muted></video>
+  <canvas id="canvas"></canvas>
+
+  <div id="ui">
+    <div id="status">กดปุ่มเพื่อเปิดกล้อง</div>
+    <div class="hint">กางมือให้ครบ 5 นิ้ว แล้วให้ดาวโคจร หรือกำปั้นเพื่อชนะ</div>
+  </div>
+
+  <div id="winnerDialog" aria-live="polite">
+    <div id="winnerEmoji">🎉</div>
+    <div id="winnerText">ผู้ชนะ</div>
+  </div>
+
+  <button id="start">📷 เปิดกล้อง</button>
+</div>
+
+<!-- MediaPipe Hands -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+
+<script>
+(() => {
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const startBtn = document.getElementById('start');
+  const statusEl = document.getElementById('status');
+  const winnerDialog = document.getElementById('winnerDialog');
+  const winnerEmoji = document.getElementById('winnerEmoji');
+  const winnerText = document.getElementById('winnerText');
+
+  // เปลี่ยน emoji ตรงนี้ได้
+  const emojis = ['⭐', '🌟', '✨', '💫', '☄️', '🎊', '🏆', '🎁', '🚀'];
+
+  let W = 0, H = 0;
+  let targetX = 0, targetY = 0;
+  let fingerX = 0, fingerY = 0;
+  let hasFinger = false;
+  let camera = null;
+  let openFingers = 0;
+  let lastWinnerAt = 0;
+
+  const fingerPairs = [
+    { tip: 8, pip: 6 },
+    { tip: 12, pip: 10 },
+    { tip: 16, pip: 14 },
+    { tip: 20, pip: 18 }
+  ];
+
+  function countExtendedFingers(landmarks) {
+    let count = 0;
+
+    if (landmarks[4] && landmarks[3] && landmarks[2]) {
+      const thumbTip = landmarks[4];
+      const thumbIp = landmarks[2];
+      const thumbExtended = Math.abs(thumbTip.x - thumbIp.x) > 0.08 || Math.abs(thumbTip.y - thumbIp.y) > 0.08;
+      if (thumbExtended) count += 1;
+    }
+
+    fingerPairs.forEach(({ tip, pip }) => {
+      const tipL = landmarks[tip];
+      const pipL = landmarks[pip];
+      if (tipL && pipL && tipL.y < pipL.y - 0.03) {
+        count += 1;
+      }
+    });
+
+    return count;
+  }
+
+  function showWinnerDialog() {
+    const pick = emojis[Math.floor(Math.random() * emojis.length)];
+    winnerEmoji.textContent = pick;
+    winnerText.textContent = 'ผู้ชนะ';
+    winnerDialog.classList.add('show');
+  }
+
+  function hideWinnerDialog() {
+    winnerDialog.classList.remove('show');
+  }
+
+  // ดาวแต่ละดวงมีวงโคจรและความเร็วต่างกันเล็กน้อย
+  const satellites = emojis.map((emoji, i) => ({
+    emoji,
+    angle: (Math.PI * 2 / emojis.length) * i,
+    speed: 0.018 + i * 0.0022,
+    radius: 45 + i * 13,
+    size: 28 + (i % 2) * 5
+  }));
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    if (!fingerX && !fingerY) {
+      fingerX = targetX = W / 2;
+      fingerY = targetY = H / 2;
+    }
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+
+  function draw() {
+    requestAnimationFrame(draw);
+
+    // Smooth movement ทำให้ emoji ไม่กระตุก
+    fingerX += (targetX - fingerX) * 0.35;
+    fingerY += (targetY - fingerY) * 0.35;
+
+    ctx.clearRect(0, 0, W, H);
+
+    if (!hasFinger) return;
+
+    const showStars = Math.max(0, openFingers / 5);
+
+    const glow = ctx.createRadialGradient(
+      fingerX, fingerY, 2,
+      fingerX, fingerY, 28
+    );
+    glow.addColorStop(0, 'rgba(255,255,180,.95)');
+    glow.addColorStop(.25, 'rgba(255,220,80,.65)');
+    glow.addColorStop(1, 'rgba(255,180,0,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(fingerX, fingerY, 30, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = '30px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('☀️', fingerX, fingerY);
+
+    if (showStars > 0.05) {
+      satellites.forEach((s, i) => {
+        s.angle += s.speed * (0.5 + showStars);
+
+        const orbitX = (s.radius + i * 3) * (0.5 + showStars * 0.9);
+        const orbitY = (s.radius * 0.68) * (0.5 + showStars * 0.9);
+
+        const x = fingerX + Math.cos(s.angle) * orbitX;
+        const y = fingerY + Math.sin(s.angle) * orbitY;
+
+        ctx.save();
+        ctx.globalAlpha = 0.25 + showStars * 0.75;
+        ctx.strokeStyle = 'rgba(255,255,255,.16)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(fingerX, fingerY, orbitX, orbitY, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.font = `${s.size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+        ctx.fillText(s.emoji, x, y);
+        ctx.restore();
+      });
+    }
+  }
+
+  const hands = new Hands({
+    locateFile: (file) =>
+      `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+  });
+
+  hands.setOptions({
+    maxNumHands: 1,
+    modelComplexity: 1,
+    minDetectionConfidence: 0.55,
+    minTrackingConfidence: 0.55
+  });
+
+  hands.onResults(results => {
+    if (!results.multiHandLandmarks || !results.multiHandLandmarks.length) {
+      hasFinger = false;
+      hideWinnerDialog();
+      statusEl.textContent = 'ไม่พบมือ — กางมือให้เห็น';
+      return;
+    }
+
+    const landmarks = results.multiHandLandmarks[0];
+    const thumbTip = landmarks[4];
+    openFingers = countExtendedFingers(landmarks);
+
+    const isFist = openFingers <= 1;
+
+    targetX = (1 - thumbTip.x) * W;
+    targetY = thumbTip.y * H;
+    hasFinger = true;
+
+    if (isFist) {
+      const now = Date.now();
+      if (now - lastWinnerAt > 1200) {
+        showWinnerDialog();
+        lastWinnerAt = now;
+      }
+      statusEl.textContent = '✊ กำปั้น — ผู้ชนะ!';
+    } else if (openFingers >= 5) {
+      hideWinnerDialog();
+      statusEl.textContent = '✨ กางมือ 5 นิ้ว — ดาวกำลังโคจร';
+    } else {
+      hideWinnerDialog();
+      statusEl.textContent = `🖐️ กางมือ ${openFingers}/5 นิ้ว ให้เต็มถึงโชว์ดาว`;
+    }
+  });
+
+  async function startCamera() {
+    startBtn.disabled = true;
+    statusEl.textContent = 'กำลังขอสิทธิ์ใช้กล้อง...';
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      });
+
+      video.srcObject = stream;
+      await video.play();
+
+      camera = new Camera(video, {
+        onFrame: async () => {
+          await hands.send({ image: video });
+        },
+        width: 1280,
+        height: 720
+      });
+
+      camera.start();
+      startBtn.style.display = 'none';
+      statusEl.textContent = 'กางมือแล้วให้เห็นนิ้วโป้งและ 5 นิ้ว 👌';
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent =
+        'เปิดกล้องไม่ได้: ' + (err.name || err.message);
+      startBtn.disabled = false;
+    }
+  }
+
+  startBtn.addEventListener('click', startCamera);
+
+  draw();
+})();
+</script>
+</body>
+</html>
